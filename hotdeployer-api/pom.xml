@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>ch.sourcepond.io</groupId>
+        <artifactId>hotdeployer</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>hotdeployer-api</artifactId>
+    <packaging>bundle</packaging>
+    <description>
+        Service API to watch changes on files/directories within a specific hotdeployment folder.
+    </description>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+    <ciManagement>
+        <url>${jenkins.baseurl}/job/${project.artifactId}</url>
+        <system>Jenkins</system>
+    </ciManagement>
+
+    <distributionManagement>
+        <site>
+            <id>www.sourcepond.ch</id>
+            <url>${site.distribution.url}/${project.groupId}/${project.artifactId}/${project.version}/</url>
+        </site>
+    </distributionManagement>
+</project>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<features xmlns="http://karaf.apache.org/xmlns/features/v1.4.0" name="hotdeployer-feature">
+    <repository>mvn:ch.sourcepond.io/fileobserver-feature/${fileobserver.version}/xml/features</repository>
+    <feature name="hotdeployer-feature" description="hotdeployer-feature">
+        <feature prerequisite="true">scr</feature>
+        <feature prerequisite="true">fileobserver-feature</feature>
+    </feature>
+</features>
