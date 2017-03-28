@@ -19,7 +19,7 @@ import java.nio.file.Path;
 /**
  * <p>Observer to receive notifications about changes on files
  * within a watched directory and its sub-directories.</p>
- *
+ * <p>
  * <p><em>Implementations of this interface must be thread-safe.</em></p>
  */
 public interface HotdeployObserver {
@@ -28,19 +28,17 @@ public interface HotdeployObserver {
      * <p>
      * Indicates, that the file specified has been modified. Modified means,
      * that the file has been created or updated. This method takes two parameters:
-     * <p>
      * <h3>Relative path</h3>
      * This path is relative to the watched directory. This path <em>cannot</em> be used to read any data.
      * The relative path always remains the same for a specific file, even when the underlying
      * watched directory (and therefore the absolute file) has been updated to point to another location.
      * Because this, use the relative path for any caching of objects created out of the file data.
-     * <p>
      * <h3>Readable Path</h3>
      * This is the (absolute) path which can be opened for reading. The readable path of a file can change in
      * case when the underlying watched directory (and therefore the absolute file) is updated to point to another
      * location. Because this, do <em>not</em> use the readable path for any caching, but, only for reading (or writing)
      * data.
-     * <p>
+     * </p>
      * <p>
      * Following code snipped should give an idea how caching of an object created out of the readable path
      * should be implemented:
@@ -48,6 +46,7 @@ public interface HotdeployObserver {
      *      final Map&lt;FileKey, Object&gt; cache = ...
      *      cache.put(pKey, readObject(pFile));
      * </pre>
+     * </p>
      *
      * @param pRelativePath Relative-path of the modified file, never {@code null}
      * @param pFile         Readable path, never {@code null}
@@ -61,8 +60,7 @@ public interface HotdeployObserver {
      * system, the delivered keys can <em>differ in case when a directory has been deleted recursively</em>. For instance, on
      * systems with a native {@link java.nio.file.WatchService} implementation you will probably get a relative path
      * for every deleted file and directory. On other systems which work with the default polling watch-service you
-     * likely only get the file key of the deleted base directory.
-     * <p>
+     * likely only get the file key of the deleted base directory.</p>
      * <p>If you work with cached objects and you want to avoid different behaviour on varying operating systems,
      * resource discarding can be safely implemented as follows:
      * <pre>
@@ -71,6 +69,7 @@ public interface HotdeployObserver {
      *      // Remove any key which is a sub-key of pRelativePath.
      *      cache.keySet().removeIf(k -&gt; k.startsWith(pRelativePath));
      * </pre>
+     * </p>
      *
      * @param pRelativePath Relative path of the discarded file or directory, never {@code null}
      */
