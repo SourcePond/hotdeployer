@@ -69,7 +69,7 @@ public interface HotdeployObserver {
      *      final Map&lt;Path, Object&gt; cache = ...
      *
      *      // Remove any key which is a sub-key of pRelativePath.
-     *      cache.keySet().removeIf(k -> k.startsWith(pRelativePath));
+     *      cache.keySet().removeIf(k -&gt; k.startsWith(pRelativePath));
      * </pre>
      *
      * @param pRelativePath Relative path of the discarded file or directory, never {@code null}
