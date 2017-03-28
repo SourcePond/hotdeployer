@@ -19,7 +19,6 @@ import java.nio.file.Path;
 /**
  * <p>Observer to receive notifications about changes on files
  * within a watched directory and its sub-directories.</p>
- * <p>
  * <p><em>Implementations of this interface must be thread-safe.</em></p>
  */
 public interface HotdeployObserver {
@@ -38,15 +37,12 @@ public interface HotdeployObserver {
      * case when the underlying watched directory (and therefore the absolute file) is updated to point to another
      * location. Because this, do <em>not</em> use the readable path for any caching, but, only for reading (or writing)
      * data.
-     * </p>
-     * <p>
-     * Following code snipped should give an idea how caching of an object created out of the readable path
+     * <p>Following code snipped should give an idea how caching of an object created out of the readable path
      * should be implemented:
      * <pre>
      *      final Map&lt;FileKey, Object&gt; cache = ...
      *      cache.put(pKey, readObject(pFile));
      * </pre>
-     * </p>
      *
      * @param pRelativePath Relative-path of the modified file, never {@code null}
      * @param pFile         Readable path, never {@code null}
@@ -69,7 +65,6 @@ public interface HotdeployObserver {
      *      // Remove any key which is a sub-key of pRelativePath.
      *      cache.keySet().removeIf(k -&gt; k.startsWith(pRelativePath));
      * </pre>
-     * </p>
      *
      * @param pRelativePath Relative path of the discarded file or directory, never {@code null}
      */

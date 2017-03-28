@@ -24,6 +24,7 @@
             <artifactId>smartswitch-api</artifactId>
         </dependency>
         <dependency>
+            <scope>provided</scope>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>

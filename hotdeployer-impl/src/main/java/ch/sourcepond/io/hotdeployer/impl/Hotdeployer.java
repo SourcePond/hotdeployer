@@ -92,16 +92,14 @@ public class Hotdeployer implements FileObserver {
     @Override
     public void modified(final FileKey fileKey, final Path path) {
         final Path relativePath = fileKey.relativePath();
-        observers.forEach(o -> {
-            observerExecutor.execute(() -> {
-                LOG.debug("Modified: relative-path : {} , absolute path {}", relativePath, path);
-                try {
-                    o.modified(relativePath, path);
-                } catch (final IOException e) {
-                    LOG.warn(e.getMessage(), e);
-                }
-            });
-        });
+        observers.forEach(o -> observerExecutor.execute(() -> {
+            LOG.debug("Modified: relative-path : {} , absolute path {}", relativePath, path);
+            try {
+                o.modified(relativePath, path);
+            } catch (final IOException e) {
+                LOG.warn(e.getMessage(), e);
+            }
+        }));
     }
 
     @Override
