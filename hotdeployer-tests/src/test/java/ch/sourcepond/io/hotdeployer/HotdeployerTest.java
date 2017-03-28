@@ -36,6 +36,7 @@ import static ch.sourcepond.testing.OptionsHelper.mockitoBundles;
 import static java.lang.Thread.sleep;
 import static java.nio.file.FileSystems.getDefault;
 import static java.nio.file.Files.*;
+import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.util.UUID.randomUUID;
 import static org.mockito.Mockito.*;
@@ -80,7 +81,7 @@ public class HotdeployerTest {
     }
 
     private void writeArbitraryContent() throws Exception {
-        try (final BufferedWriter writer = newBufferedWriter(testFile, CREATE)) {
+        try (final BufferedWriter writer = newBufferedWriter(testFile, CREATE, APPEND)) {
             writer.write(randomUUID().toString());
         }
         sleep(500);
