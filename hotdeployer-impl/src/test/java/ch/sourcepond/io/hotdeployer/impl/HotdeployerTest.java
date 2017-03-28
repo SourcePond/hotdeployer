@@ -39,7 +39,7 @@ import static org.mockito.Mockito.*;
 public class HotdeployerTest implements Thread.UncaughtExceptionHandler {
     private final SmartSwitchBuilderFactory ssbBuilderFactory = mock(SmartSwitchBuilderFactory.class);
     private final Config config = mock(Config.class);
-    private final WatchedDirectoryFactory factory = mock(WatchedDirectoryFactory.class);
+    private final DirectoryFactory factory = mock(DirectoryFactory.class);
     private final WatchedDirectory watchedDirectory = mock(WatchedDirectory.class);
     private final Path directory = mock(Path.class);
     private final Path relativeFile = mock(Path.class);

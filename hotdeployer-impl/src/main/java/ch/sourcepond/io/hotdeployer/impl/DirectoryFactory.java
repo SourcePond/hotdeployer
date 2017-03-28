@@ -26,7 +26,7 @@ import static java.nio.file.Paths.get;
 /**
  *
  */
-class WatchedDirectoryFactory {
+class DirectoryFactory {
     static final Path DEFAULT_HOTDEPLOY_DIRECTORY = getDefault().getPath(getProperty("java.io.tmpdir"), "sourcepond", "hotdeploy");
     static final String DIRECTORY_KEY = "hotdeploymentDirectory";
 

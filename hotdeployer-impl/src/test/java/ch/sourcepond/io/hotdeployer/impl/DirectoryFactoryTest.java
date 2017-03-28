@@ -7,8 +7,8 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 
-import static ch.sourcepond.io.hotdeployer.impl.WatchedDirectoryFactory.DEFAULT_HOTDEPLOY_DIRECTORY;
-import static ch.sourcepond.io.hotdeployer.impl.WatchedDirectoryFactory.DIRECTORY_KEY;
+import static ch.sourcepond.io.hotdeployer.impl.DirectoryFactory.DEFAULT_HOTDEPLOY_DIRECTORY;
+import static ch.sourcepond.io.hotdeployer.impl.DirectoryFactory.DIRECTORY_KEY;
 import static java.lang.System.getProperty;
 import static java.nio.file.FileSystems.getDefault;
 import static org.junit.Assert.*;
@@ -18,11 +18,11 @@ import static org.mockito.Mockito.when;
 /**
  *
  */
-public class WatchedDirectoryFactoryTest {
+public class DirectoryFactoryTest {
     private static final String JAVA_IO_TMPDIR_PROPERTY = "java.io.tmpdir";
     static final Path TEST_DIR = getDefault().getPath(getProperty("user.dir"), "target");
     private static String javaIoTmpdir;
-    private final WatchedDirectoryFactory factory = new WatchedDirectoryFactory();
+    private final DirectoryFactory factory = new DirectoryFactory();
     private final Config config = mock(Config.class);
 
     @BeforeClass
