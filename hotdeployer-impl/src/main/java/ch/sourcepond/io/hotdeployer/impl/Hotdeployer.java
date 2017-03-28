@@ -112,7 +112,6 @@ public class Hotdeployer implements FileObserver {
         observers.add(pObserver);
     }
 
-    @Reference(policy = DYNAMIC, cardinality = MULTIPLE)
     public void removeObserver(final HotdeployObserver pObserver) {
         observers.remove(pObserver);
     }
