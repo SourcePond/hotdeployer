@@ -69,6 +69,7 @@ public class Hotdeployer implements FileObserver {
     public void activate(final BundleContext pContext, final Config pConfig) throws IOException, URISyntaxException {
         delegate = watchedDirectoryFactory.newWatchedDirectory(pConfig);
         registration = pContext.registerService(WatchedDirectory.class, delegate, null);
+        LOG.info("Hotdeployer started");
     }
 
     @Modified
@@ -79,6 +80,7 @@ public class Hotdeployer implements FileObserver {
     @Deactivate
     public void deactivate() {
         registration.unregister();
+        LOG.info("Hotdeployer shutdown");
     }
 
     @Override
@@ -89,10 +91,12 @@ public class Hotdeployer implements FileObserver {
 
     @Override
     public void modified(final FileKey fileKey, final Path path) {
+        final Path relativePath = fileKey.relativePath();
         observers.forEach(o -> {
             observerExecutor.execute(() -> {
+                LOG.debug("Modified: relative-path : {} , absolute path {}", relativePath, path);
                 try {
-                    o.modified(fileKey.relativePath(), path);
+                    o.modified(relativePath, path);
                 } catch (final IOException e) {
                     LOG.warn(e.getMessage(), e);
                 }
@@ -103,8 +107,15 @@ public class Hotdeployer implements FileObserver {
     @Override
     public void discard(final FileKey fileKey) {
         observers.forEach(o ->
-                observerExecutor.execute(() ->
-                        o.discard(fileKey.relativePath())));
+                observerExecutor.execute(() -> {
+                    final Path relativePath = fileKey.relativePath();
+                    LOG.debug("Discard: {}", relativePath);
+                    try {
+                        o.discard(fileKey.relativePath());
+                    } catch (final Exception e) {
+                        LOG.error(e.getMessage(), e);
+                    }
+                }));
     }
 
     @Reference(policy = DYNAMIC, cardinality = MULTIPLE)
