@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>ch.sourcepond</groupId>
+        <artifactId>bundle-test</artifactId>
+        <version>0.7.7</version>
+        <relativePath/>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>ch.sourcepond.io</groupId>
+    <artifactId>hotdeployer-tests</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <inceptionYear>2016</inceptionYear>
+    <description>
+        OSGi integration tests for default hotdeployer implementation.
+    </description>
+
+    <properties>
+        <org.eclipse.osgi.version>3.10.101.v20150820-1432</org.eclipse.osgi.version>
+        <repo.project>fileobserver</repo.project>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>ch.sourcepond.io</groupId>
+            <artifactId>hotdeployer-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- This dependency is necessary to keep the tests behind the feature
+         in the build order -->
+        <dependency>
+            <scope>runtime</scope>
+            <type>xml</type>
+            <classifier>features</classifier>
+            <groupId>ch.sourcepond.io</groupId>
+            <artifactId>hotdeployer-feature</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <scope>runtime</scope>
+            <groupId>org.apache.karaf</groupId>
+            <artifactId>apache-karaf</artifactId>
+            <version>${karaf.version}</version>
+            <type>tar.gz</type>
+        </dependency>
+        <dependency>
+            <scope>runtime</scope>
+            <groupId>org.apache.karaf.features</groupId>
+            <artifactId>standard</artifactId>
+            <version>${karaf.version}</version>
+            <classifier>features</classifier>
+            <type>xml</type>
+        </dependency>
+        <dependency>
+            <scope>runtime</scope>
+            <groupId>org.apache.karaf</groupId>
+            <artifactId>org.apache.karaf.exception</artifactId>
+        </dependency>
+        <dependency>
+            <scope>runtime</scope>
+            <groupId>org.eclipse.tycho</groupId>
+            <artifactId>org.eclipse.osgi</artifactId>
+            <version>${org.eclipse.osgi.version}</version>
+        </dependency>
+        <dependency>
+            <scope>runtime</scope>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.framework</artifactId>
+        </dependency>
+        <dependency>
+            <scope>test</scope>
+            <groupId>ch.sourcepond.testing</groupId>
+            <artifactId>bundle-test-support</artifactId>
+        </dependency>
+        <dependency>
+            <scope>test</scope>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.javax-inject</artifactId>
+        </dependency>
+        <dependency>
+            <scope>test</scope>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-spi</artifactId>
+        </dependency>
+        <dependency>
+            <scope>test</scope>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam</artifactId>
+        </dependency>
+        <dependency>
+            <scope>test</scope>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-container-karaf</artifactId>
+        </dependency>
+    </dependencies>
+
+
+    <!-- Remove this when MNG-3244, MNG-5951 are resolved -->
+    <scm>
+        <url>https://${repo.domain}/${repo.path}</url>
+        <connection>scm:git:${project.scm.url}.git</connection>
+        <developerConnection>scm:git:ssh://git@${repo.domain}/${repo.path}.git</developerConnection>
+    </scm>
+
+    <ciManagement>
+        <url>${jenkins.baseurl}/job/${repo.project}</url>
+        <system>Jenkins</system>
+    </ciManagement>
+
+    <distributionManagement>
+        <site>
+            <id>www.sourcepond.ch</id>
+            <url>${site.distribution.url}/${project.groupId}/${project.artifactId}/${project.version}/</url>
+        </site>
+    </distributionManagement>
+</project>

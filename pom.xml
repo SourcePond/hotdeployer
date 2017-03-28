@@ -33,6 +33,7 @@
         <module>hotdeployer-feature</module>
         <module>hotdeployer-impl</module>
         <module>hotdeployer-api</module>
+        <module>hotdeployer-tests</module>
     </modules>
 
     <properties>
