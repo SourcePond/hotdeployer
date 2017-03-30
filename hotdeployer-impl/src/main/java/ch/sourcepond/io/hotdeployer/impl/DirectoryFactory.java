@@ -35,7 +35,7 @@ class DirectoryFactory {
         if (pConfig.hotdeployDirectoryURI().isEmpty()) {
             hotdeployDir = createDirectories(DEFAULT_HOTDEPLOY_DIRECTORY);
         } else {
-            hotdeployDir = get(new URI(pConfig.hotdeployDirectoryURI()));
+            hotdeployDir = createDirectories(get(new URI(pConfig.hotdeployDirectoryURI())));
         }
         return hotdeployDir;
     }
