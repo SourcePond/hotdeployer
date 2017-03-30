@@ -33,11 +33,11 @@ class DirectoryFactory {
     Path getHotdeployDir(final Config pConfig) throws IOException, URISyntaxException {
         final Path hotdeployDir;
         if (pConfig.hotdeployDirectoryURI().isEmpty()) {
-            hotdeployDir = createDirectories(DEFAULT_HOTDEPLOY_DIRECTORY);
+            hotdeployDir = DEFAULT_HOTDEPLOY_DIRECTORY);
         } else {
-            hotdeployDir = createDirectories(get(new URI(pConfig.hotdeployDirectoryURI())));
+            hotdeployDir = get(new URI(pConfig.hotdeployDirectoryURI()));
         }
-        return hotdeployDir;
+        return createDirectories(hotdeployDir);
     }
 
     WatchedDirectory newWatchedDirectory(final Config pConfig) throws IOException, URISyntaxException {
