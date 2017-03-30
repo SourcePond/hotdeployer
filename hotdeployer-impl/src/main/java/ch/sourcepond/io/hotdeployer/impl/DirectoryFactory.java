@@ -33,7 +33,7 @@ class DirectoryFactory {
     Path getHotdeployDir(final Config pConfig) throws IOException, URISyntaxException {
         final Path hotdeployDir;
         if (pConfig.hotdeployDirectoryURI().isEmpty()) {
-            hotdeployDir = DEFAULT_HOTDEPLOY_DIRECTORY);
+            hotdeployDir = DEFAULT_HOTDEPLOY_DIRECTORY;
         } else {
             hotdeployDir = get(new URI(pConfig.hotdeployDirectoryURI()));
         }
