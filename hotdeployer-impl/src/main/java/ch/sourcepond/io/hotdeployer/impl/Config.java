@@ -16,11 +16,18 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 /**
  *
  */
-@ObjectClassDefinition(name="Sourcepond hotdeployer configuration")
+@ObjectClassDefinition(name = "Sourcepond hotdeployer configuration")
 public @interface Config {
 
     @AttributeDefinition(
             name = "Hotdeployment directory URI",
             description = "URI which points to the watched root directory, for example file:///tmp/hotdeploy")
     String hotdeployDirectoryURI() default "";
+
+    @AttributeDefinition(
+            name="Naming patterns to be blacklisted",
+            description = "Regular expressions to identify files/directories within the hotdeployment directory " +
+                    "(see 'hotdeployDirectoryURI') which should not be ignored."
+    )
+    String[] blacklistPatterns() default "";
 }
