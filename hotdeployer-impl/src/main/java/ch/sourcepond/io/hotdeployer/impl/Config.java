@@ -27,7 +27,7 @@ public @interface Config {
     @AttributeDefinition(
             name="Naming patterns to be blacklisted",
             description = "Regular expressions to identify files/directories within the hotdeployment directory " +
-                    "(see 'hotdeployDirectoryURI') which should not be ignored."
+                    "(see 'hotdeployDirectoryURI') which should be ignored i.e. not be handled by any observer."
     )
     String[] blacklistPatterns() default "";
 }
