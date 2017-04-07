@@ -4,7 +4,7 @@
     <parent>
         <groupId>ch.sourcepond.io</groupId>
         <artifactId>hotdeployer</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>2.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>hotdeployer-api</artifactId>
@@ -12,6 +12,17 @@
     <description>
         Service API to watch changes on files/directories within a specific hotdeployment folder.
     </description>
+
+    <dependencies>
+        <dependency>
+            <groupId>ch.sourcepond.io</groupId>
+            <artifactId>fileobserver-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>

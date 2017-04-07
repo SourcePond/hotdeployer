@@ -3,7 +3,7 @@
     <parent>
         <groupId>ch.sourcepond.io</groupId>
         <artifactId>hotdeployer</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>2.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>hotdeployer-impl</artifactId>
@@ -18,10 +18,6 @@
         <dependency>
             <groupId>ch.sourcepond.io</groupId>
             <artifactId>fileobserver-spi</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ch.sourcepond.commons</groupId>
-            <artifactId>smartswitch-api</artifactId>
         </dependency>
         <dependency>
             <scope>provided</scope>

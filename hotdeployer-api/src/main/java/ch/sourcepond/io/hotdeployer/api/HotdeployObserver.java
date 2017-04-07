@@ -23,6 +23,8 @@ import java.nio.file.Path;
  */
 public interface HotdeployObserver {
 
+    void bundleStopped(ResourceKey pKey);
+
     /**
      * <p>
      * Indicates, that the file specified has been modified. Modified means,
@@ -44,11 +46,11 @@ public interface HotdeployObserver {
      *      cache.put(pKey, readObject(pFile));
      * </pre>
      *
-     * @param pRelativePath Relative-path of the modified file, never {@code null}
+     * @param pKey Relative-path of the modified file, never {@code null}
      * @param pFile         Readable path, never {@code null}
      * @throws IOException Thrown, if the modified path could not be read.
      */
-    void modified(Path pRelativePath, Path pFile) throws IOException;
+    void modified(ResourceKey pKey, Path pFile) throws IOException;
 
     /**
      * <p>Indicates, that the file or directory with the relative path specified has been discarded for some reason
@@ -66,7 +68,7 @@ public interface HotdeployObserver {
      *      cache.keySet().removeIf(k -&gt; k.startsWith(pRelativePath));
      * </pre>
      *
-     * @param pRelativePath Relative path of the discarded file or directory, never {@code null}
+     * @param pKey Relative path of the discarded file or directory, never {@code null}
      */
-    void discard(Path pRelativePath);
+    void discard(ResourceKey pKey);
 }

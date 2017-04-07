@@ -11,39 +11,50 @@ limitations under the License.*/
 package ch.sourcepond.io.hotdeployer;
 
 import ch.sourcepond.io.hotdeployer.api.HotdeployObserver;
+import ch.sourcepond.io.hotdeployer.api.ResourceKey;
 import ch.sourcepond.testing.BundleContextClassLoaderRule;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatcher;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.options.MavenUrlReference;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import javax.inject.Inject;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 
 import static ch.sourcepond.testing.OptionsHelper.karafContainer;
 import static ch.sourcepond.testing.OptionsHelper.mockitoBundles;
+import static java.lang.String.format;
+import static java.lang.System.getProperty;
 import static java.lang.Thread.sleep;
 import static java.nio.file.FileSystems.getDefault;
+import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.Files.*;
 import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.util.UUID.randomUUID;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 import static org.ops4j.pax.exam.CoreOptions.maven;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
+import static org.osgi.framework.Constants.SYSTEM_BUNDLE_ID;
 
 /**
  *
@@ -51,14 +62,14 @@ import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
 public class HotdeployerTest {
-
-    private static final Path TEST_DIR = getDefault().getPath(System.getProperty("user.dir"), "target", "hotdeploy");
+    private final static Path TEST_DIR = getDefault().getPath(getProperty("user.dir"), "target", "hotdeploy");
 
     @Rule
     public BundleContextClassLoaderRule rule = new BundleContextClassLoaderRule(this);
 
     @Inject
     private BundleContext context;
+    private Bundle systemBundle;
     private final HotdeployObserver observer = mock(HotdeployObserver.class);
     private ServiceRegistration<HotdeployObserver> hotdeployObserverRegistration;
     private Path testFile;
@@ -75,7 +86,7 @@ public class HotdeployerTest {
         return new Option[]{
                 mavenBundle().groupId("ch.sourcepond.testing").artifactId("bundle-test-support").versionAsInProject(),
                 mockitoBundles(),
-                editConfigurationFilePut("etc/ch.sourcepond.io.hotdeployer.impl.Hotdeployer.cfg", "hotdeployDirectoryURI", createDirectories(TEST_DIR).toUri().toString()),
+                editConfigurationFilePut("etc/ch.sourcepond.io.hotdeployer.impl.Hotdeployer.cfg", "hotdeployDirectoryURI", TEST_DIR.toUri().toString()),
                 karafContainer(features(hotdeployerRepo, "hotdeployer-feature"))
         };
     }
@@ -89,17 +100,68 @@ public class HotdeployerTest {
 
     @Before
     public void setup() throws Exception {
-        testFile = TEST_DIR.resolve("test.txt");
+        createDirectories(TEST_DIR);
+        systemBundle = context.getBundle(SYSTEM_BUNDLE_ID);
         hotdeployObserverRegistration = context.registerService(HotdeployObserver.class, observer, null);
     }
 
     @After
-    public void tearDown() throws InterruptedException {
+    public void tearDown() throws Exception {
         hotdeployObserverRegistration.unregister();
+        walkFileTree(TEST_DIR, new SimpleFileVisitor<Path>() {
+
+            @Override
+            public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
+                delete(file);
+                return CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(final Path dir, final IOException exc) throws IOException {
+                if (!TEST_DIR.equals(dir)) {
+                    delete(dir);
+                }
+                return CONTINUE;
+            }
+        });
+    }
+
+    private ResourceKey key(final Path pRelativePath, final Bundle pSource) {
+        return argThat(new ArgumentMatcher<ResourceKey>() {
+            @Override
+            public boolean matches(final ResourceKey key) {
+                return pRelativePath.equals(key.getRelativePath()) && pSource.equals(key.getSource());
+            }
+
+            @Override
+            public String toString() {
+                return format("[%s:%s]", pSource, pRelativePath);
+            }
+        });
+    }
+
+    @Test
+    public void verifyKeyRelativeToBundlePath() throws Exception {
+        final Bundle bundle = context.getBundle();
+        final Path bundleRoot = createDirectories(TEST_DIR.resolve(
+                format("%s%s", "$BUNDLE$_", bundle.getSymbolicName())).resolve(
+                bundle.getVersion().toString()));
+        testFile = bundleRoot.resolve("test.txt");
+
+        writeArbitraryContent();
+
+        // modified should have been called exactly once
+        final Path relativePath = bundleRoot.relativize(testFile);
+        verify(observer, timeout(20000)).modified(key(relativePath, bundle), eq(testFile));
+
+        delete(testFile);
+        verify(observer, timeout(10000)).discard(key(relativePath, bundle));
     }
 
     @Test
     public void verifyModifyAndDiscard() throws Exception {
+        testFile = TEST_DIR.resolve("test.txt");
+
         // Write every 500ms something into file; do this 10 times
         for (int i = 0 ; i < 10 ; i++) {
             writeArbitraryContent();
@@ -107,9 +169,9 @@ public class HotdeployerTest {
 
         // modified should have been called exactly once
         final Path relativePath = TEST_DIR.relativize(testFile);
-        verify(observer, timeout(20000)).modified(relativePath, testFile);
+        verify(observer, timeout(20000)).modified(key(relativePath, systemBundle), eq(testFile));
 
         delete(testFile);
-        verify(observer, timeout(10000)).discard(relativePath);
+        verify(observer, timeout(10000)).discard(key(relativePath, systemBundle));
     }
 }
