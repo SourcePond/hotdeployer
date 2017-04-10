@@ -30,7 +30,7 @@ public @interface Config {
                     "sub-directories of the hotdeployment directory (see 'hotdeployDirectoryURI'). These sub-directories " +
                     "must be specified as follows: A) the first sub-directory must meet naming pattern " +
                     "${bundleResourceDirectoryPrefix}Bundle-SymbolicName and needs to be placed directly within " +
-                    "the hotdeployment directory (example: BUNDLE_com.foo.bar). B) The second sub-directory must be " +
+                    "the hotdeployment directory (example: $BUNDLE$_com.foo.bar). B) The second sub-directory must be " +
                     "placed within the previously mentioned bundle-directory, and, must be named like the version of " +
                     "the desired bundle (example: 1.0.0.20170101_1234). This property specifies the prefix which is" +
                     "necessary to decide whether a directory is such a special directory or not.")

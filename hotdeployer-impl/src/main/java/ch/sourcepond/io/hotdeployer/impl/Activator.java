@@ -22,11 +22,9 @@ import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import static java.util.concurrent.ConcurrentHashMap.newKeySet;
 import static org.osgi.service.component.annotations.ReferenceCardinality.MULTIPLE;
 import static org.osgi.service.component.annotations.ReferencePolicy.DYNAMIC;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -36,67 +34,61 @@ import static org.slf4j.LoggerFactory.getLogger;
  */
 @Component
 @Designate(ocd = Config.class)
-public class Hotdeployer {
-    private static final Logger LOG = getLogger(Hotdeployer.class);
+public class Activator {
+    private static final Logger LOG = getLogger(Activator.class);
     private final DirectoryFactory directoryFactory;
     private BundleDeterminator bundleDeterminator;
-    private ResourceKeyFactory resourceKeyFactory;
-    private WatchedDirectory delegate;
+    private KeyProvider keyProvider;
+    private WatchedDirectory watchedDirectory;
     private ServiceRegistration<KeyDeliveryHook> hookRegistration;
     private ServiceRegistration<WatchedDirectory> watchedDirectoryRegistration;
-    private Collection<ServiceRegistration<FileObserver>> adapterReferences = newKeySet();
     private ConcurrentMap<HotdeployObserver, ServiceRegistration<FileObserver>> observers = new ConcurrentHashMap<>();
     private BundleContext context;
-    private Config config;
 
     // Constructor for OSGi DS
-    public Hotdeployer() {
+    public Activator() {
         this(new DirectoryFactory());
     }
 
     // Constructor for testing
-    Hotdeployer(final DirectoryFactory pDirectoryFactory) {
+    Activator(final DirectoryFactory pDirectoryFactory) {
         directoryFactory = pDirectoryFactory;
-    }
-
-    void setBundleDeterminator(final BundleDeterminator pBundleDeterminator) {
-        bundleDeterminator = pBundleDeterminator;
-    }
-
-    void setResourceKeyFactory(final ResourceKeyFactory pResourceKeyFactory) {
-        resourceKeyFactory = pResourceKeyFactory;
     }
 
     @Activate
     public void activate(final BundleContext pContext, final Config pConfig) throws IOException, URISyntaxException {
         context = pContext;
-        config = pConfig;
-        delegate = directoryFactory.newWatchedDirectory(pConfig);
-        watchedDirectoryRegistration = pContext.registerService(WatchedDirectory.class, delegate, null);
-        setBundleDeterminator(new BundleDeterminator(pContext, pConfig.bundleResourceDirectoryPrefix()));
-        final ResourceKeyFactory resourceKeyFactory = new ResourceKeyFactory(bundleDeterminator);
-        hookRegistration = pContext.registerService(KeyDeliveryHook.class, resourceKeyFactory, null);
-        setResourceKeyFactory(resourceKeyFactory);
-        LOG.info("Hotdeployer started");
+        watchedDirectory = directoryFactory.newWatchedDirectory(pConfig);
+        watchedDirectoryRegistration = pContext.registerService(WatchedDirectory.class, watchedDirectory, null);
+        bundleDeterminator = new BundleDeterminator(pContext, pConfig.bundleResourceDirectoryPrefix());
+        keyProvider = new KeyProvider(bundleDeterminator);
+
+        pContext.addBundleListener(bundleDeterminator);
+
+        hookRegistration = pContext.registerService(KeyDeliveryHook.class, keyProvider, null);
+        LOG.info("Activator started");
     }
 
     @Modified
     public void modify(final Config pConfig) throws IOException, URISyntaxException {
-        delegate.relocate(directoryFactory.getHotdeployDir(pConfig));
+        watchedDirectory.relocate(directoryFactory.getHotdeployDir(pConfig));
     }
 
     @Deactivate
     public void deactivate() {
         watchedDirectoryRegistration.unregister();
         hookRegistration.unregister();
-        LOG.info("Hotdeployer shutdown");
+        observers.forEach((k, v) -> v.unregister());
+        observers.clear();
+        context.removeBundleListener(bundleDeterminator);
+        LOG.info("Activator shutdown");
     }
 
     @Reference(policy = DYNAMIC, cardinality = MULTIPLE)
     public void addObserver(final HotdeployObserver pObserver) {
         observers.put(pObserver, context.registerService(
                 FileObserver.class,
-                new FileObserverAdapter(resourceKeyFactory, pObserver),
+                new ObserverAdapter(keyProvider, pObserver),
                 null));
     }
 
@@ -104,6 +96,8 @@ public class Hotdeployer {
         final ServiceRegistration<FileObserver> adapterRegistration = observers.remove(pObserver);
         if (adapterRegistration == null) {
             LOG.warn("No adapter was registered for hotdeployer-observer {}", pObserver);
+        } else {
+            adapterRegistration.unregister();
         }
     }
 }

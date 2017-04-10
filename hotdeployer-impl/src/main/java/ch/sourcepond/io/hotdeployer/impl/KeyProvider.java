@@ -25,11 +25,11 @@ import static org.osgi.framework.Constants.SYSTEM_BUNDLE_ID;
 /**
  *
  */
-class ResourceKeyFactory implements KeyDeliveryHook {
+class KeyProvider implements KeyDeliveryHook {
     private final ConcurrentMap<FileKey, ResourceKey> keys = new ConcurrentHashMap<>();
     private final BundleDeterminator determinator;
 
-    ResourceKeyFactory(final BundleDeterminator pDeterminator) {
+    KeyProvider(final BundleDeterminator pDeterminator) {
         determinator = pDeterminator;
     }
 

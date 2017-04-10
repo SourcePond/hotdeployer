@@ -86,7 +86,7 @@ public class HotdeployerTest {
         return new Option[]{
                 mavenBundle().groupId("ch.sourcepond.testing").artifactId("bundle-test-support").versionAsInProject(),
                 mockitoBundles(),
-                editConfigurationFilePut("etc/ch.sourcepond.io.hotdeployer.impl.Hotdeployer.cfg", "hotdeployDirectoryURI", TEST_DIR.toUri().toString()),
+                editConfigurationFilePut("etc/ch.sourcepond.io.hotdeployer.impl.Activator.cfg", "hotdeployDirectoryURI", TEST_DIR.toUri().toString()),
                 karafContainer(features(hotdeployerRepo, "hotdeployer-feature"))
         };
     }

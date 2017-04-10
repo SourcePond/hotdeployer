@@ -24,14 +24,14 @@ import static org.slf4j.LoggerFactory.getLogger;
 /**
  *
  */
-class FileObserverAdapter implements FileObserver {
-    private static final Logger LOG = getLogger(FileObserverAdapter.class);
-    private final ResourceKeyFactory resourceKeyFactory;
+class ObserverAdapter implements FileObserver {
+    private static final Logger LOG = getLogger(ObserverAdapter.class);
+    private final KeyProvider keyProvider;
     private final HotdeployObserver hotdeployObserver;
 
-    FileObserverAdapter(final ResourceKeyFactory pResourceKeyFactory,
-                        final HotdeployObserver pHotdeployObserver) {
-        resourceKeyFactory = pResourceKeyFactory;
+    ObserverAdapter(final KeyProvider pKeyProvider,
+                    final HotdeployObserver pHotdeployObserver) {
+        keyProvider = pKeyProvider;
         hotdeployObserver = pHotdeployObserver;
     }
 
@@ -43,14 +43,14 @@ class FileObserverAdapter implements FileObserver {
 
     @Override
     public void modified(final FileKey fileKey, final Path path) throws IOException {
-        final ResourceKey key = resourceKeyFactory.getKey(fileKey);
+        final ResourceKey key = keyProvider.getKey(fileKey);
         hotdeployObserver.modified(key, path);
         LOG.debug("Modified: resource-key : {} , absolute path {}", key, path);
     }
 
     @Override
     public void discard(final FileKey fileKey) {
-        final ResourceKey key = resourceKeyFactory.getKey(fileKey);
+        final ResourceKey key = keyProvider.getKey(fileKey);
         hotdeployObserver.discard(key);
         LOG.debug("Discard: resource-key : {}", key);
     }
