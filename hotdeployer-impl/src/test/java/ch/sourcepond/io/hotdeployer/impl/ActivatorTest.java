@@ -59,12 +59,10 @@ public class ActivatorTest {
 
     @Test
     public void activate() throws Exception {
-        verify(context).addBundleListener(notNull());
         activator.deactivate();
         verify(watchedDirectoryRegistration).unregister();
         verify(hookRegistration).unregister();
         verify(observerAdapterRegistration).unregister();
-        verify(context).removeBundleListener(notNull());
     }
 
     @Test
