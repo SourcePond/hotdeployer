@@ -62,9 +62,6 @@ public class Activator {
         watchedDirectoryRegistration = pContext.registerService(WatchedDirectory.class, watchedDirectory, null);
         bundleDeterminator = new BundleDeterminator(pContext, pConfig.bundleResourceDirectoryPrefix());
         keyProvider = new KeyProvider(bundleDeterminator);
-
-        pContext.addBundleListener(bundleDeterminator);
-
         hookRegistration = pContext.registerService(KeyDeliveryHook.class, keyProvider, null);
         LOG.info("Activator started");
     }
@@ -80,7 +77,6 @@ public class Activator {
         hookRegistration.unregister();
         observers.forEach((k, v) -> v.unregister());
         observers.clear();
-        context.removeBundleListener(bundleDeterminator);
         LOG.info("Activator shutdown");
     }
 

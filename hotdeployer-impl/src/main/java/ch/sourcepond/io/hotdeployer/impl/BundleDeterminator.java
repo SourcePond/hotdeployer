@@ -10,14 +10,17 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl;
 
-import org.osgi.framework.*;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Version;
 import org.slf4j.Logger;
 
 import java.nio.file.Path;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import static org.osgi.framework.BundleEvent.STOPPED;
+import static java.lang.String.format;
 import static org.osgi.framework.Constants.SYSTEM_BUNDLE_ID;
 import static org.osgi.framework.Version.valueOf;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -25,9 +28,13 @@ import static org.slf4j.LoggerFactory.getLogger;
 /**
  *
  */
-class BundleDeterminator implements BundleListener {
+class BundleDeterminator {
     private static Logger LOG = getLogger(BundleDeterminator.class);
+    private static final int SYMBOLIC_NAME_INDEX = 0;
+    private static final int VERSION_INDEX = 1;
     static final int SPECIAL_BUNDLE_NAME_COUNT = 2;
+    private static final int WHOLE_BUNDLE_DIRECTORY = 1;
+    private static final int VERSION_DIRECTORY_ONLY = 2;
     private final ConcurrentMap<Path, Bundle> bundles = new ConcurrentHashMap<>();
     private final String prefix;
     private final BundleContext context;
@@ -39,13 +46,22 @@ class BundleDeterminator implements BundleListener {
         systemBundle = pContext.getBundle(SYSTEM_BUNDLE_ID);
     }
 
-    Bundle determine(final Path pRelativePath) {
+    private boolean isBoundToBundle(final Path pRelativePath) {
+        return pRelativePath.getName(SYMBOLIC_NAME_INDEX).toString().startsWith(prefix);
+    }
+
+    private Path toVersionDirectory(final Path pRelativePath) {
+        return pRelativePath.subpath(SYMBOLIC_NAME_INDEX, SPECIAL_BUNDLE_NAME_COUNT);
+    }
+
+    Bundle determine(final Path pRelativePath) throws BundleDeterminationException {
         final Bundle bundle;
-        if (pRelativePath.getNameCount() >= SPECIAL_BUNDLE_NAME_COUNT &&
-                pRelativePath.getName(0).toString().startsWith(prefix)) {
-            bundle = bundles.computeIfAbsent(
-                    pRelativePath.subpath(0, SPECIAL_BUNDLE_NAME_COUNT),
-                    this::findBundle);
+        if (pRelativePath.getNameCount() >= SPECIAL_BUNDLE_NAME_COUNT && isBoundToBundle(pRelativePath)) {
+            try {
+                bundle = bundles.computeIfAbsent(toVersionDirectory(pRelativePath), this::findBundle);
+            } catch (final IllegalArgumentException | NoSuchElementException e) {
+                throw new BundleDeterminationException(e);
+            }
         } else {
             // If path does not meet the criteria we use the
             bundle = systemBundle;
@@ -55,31 +71,33 @@ class BundleDeterminator implements BundleListener {
 
     private Bundle findBundle(final Path pBundleKey) {
         Bundle bundle = null;
-        try {
-            final String symbolicName = pBundleKey.getName(0).toString().substring(prefix.length());
-            final Version version = valueOf(pBundleKey.getName(1).toString());
+        final String symbolicName = pBundleKey.getName(SYMBOLIC_NAME_INDEX).toString().substring(prefix.length());
+        final Version version = valueOf(pBundleKey.getName(VERSION_INDEX).toString());
 
-            for (final Bundle current : context.getBundles()) {
-                if (symbolicName.equals(current.getSymbolicName()) && version.equals(current.getVersion())) {
-                    bundle = current;
-                    break;
-                }
+        for (final Bundle current : context.getBundles()) {
+            if (symbolicName.equals(current.getSymbolicName()) && version.equals(current.getVersion())) {
+                bundle = current;
+                break;
             }
-        } catch (final IllegalArgumentException e) {
-            LOG.warn(e.getMessage(), e);
         }
 
         if (bundle == null) {
-            bundle = systemBundle;
+            throw new NoSuchElementException(format("No bundle found with symbolic-name %s and version %s!\n" +
+                    "The bundle may have been uninstalled. If you still need its resources, move them into\n" +
+                    "a top-level directory because %s is not valid anymore, or, re-install the bundle.",
+                    symbolicName, version, pBundleKey));
         }
 
         return bundle;
     }
 
-    @Override
-    public void bundleChanged(final BundleEvent event) {
-        if (STOPPED == event.getType()) {
-            bundles.values().remove(event.getBundle());
+    void clearCacheFor(final Path pRelativePath) {
+        if (isBoundToBundle(pRelativePath)) {
+            if (WHOLE_BUNDLE_DIRECTORY == pRelativePath.getNameCount()) {
+                bundles.keySet().removeIf(p -> p.startsWith(pRelativePath));
+            } else if (VERSION_DIRECTORY_ONLY == pRelativePath.getNameCount()) {
+                bundles.remove(toVersionDirectory(pRelativePath));
+            }
         }
     }
 }

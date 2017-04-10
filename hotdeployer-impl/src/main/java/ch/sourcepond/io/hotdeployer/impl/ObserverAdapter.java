@@ -43,15 +43,23 @@ class ObserverAdapter implements FileObserver {
 
     @Override
     public void modified(final FileKey fileKey, final Path path) throws IOException {
-        final ResourceKey key = keyProvider.getKey(fileKey);
-        hotdeployObserver.modified(key, path);
-        LOG.debug("Modified: resource-key : {} , absolute path {}", key, path);
+        try {
+            final ResourceKey key = keyProvider.getKey(fileKey);
+            hotdeployObserver.modified(key, path);
+            LOG.debug("Modified: resource-key : {} , absolute path {}", key, path);
+        } catch (final ResourceKeyException e) {
+            LOG.warn("Observer was not informed about modification because a problem was reported!", e);
+        }
     }
 
     @Override
     public void discard(final FileKey fileKey) {
-        final ResourceKey key = keyProvider.getKey(fileKey);
-        hotdeployObserver.discard(key);
-        LOG.debug("Discard: resource-key : {}", key);
+        try {
+            final ResourceKey key = keyProvider.getKey(fileKey);
+            hotdeployObserver.discard(key);
+            LOG.debug("Discard: resource-key : {}", key);
+        } catch (final ResourceKeyException e) {
+            LOG.warn("Observer was not informed about discard because a problem was reported!", e);
+        }
     }
 }

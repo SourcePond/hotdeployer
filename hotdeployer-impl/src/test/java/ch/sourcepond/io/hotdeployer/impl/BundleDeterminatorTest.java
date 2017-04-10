@@ -14,10 +14,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleEvent;
 import org.osgi.framework.Version;
 
 import java.nio.file.Path;
+import java.util.NoSuchElementException;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -35,10 +35,10 @@ public class BundleDeterminatorTest {
     private final BundleContext context = mock(BundleContext.class);
     private final Bundle userBundle = mock(Bundle.class);
     private final Bundle systemBundle = mock(Bundle.class);
-    private final Bundle[] bundles = new Bundle[] { systemBundle, userBundle };
-    private final Path relativePath = mock(Path.class);
+    private final Bundle[] bundles = new Bundle[]{systemBundle, userBundle};
     private final Path symbolicNamePart = mock(Path.class, withSettings().name(ANY_PREFIX + ANY_SYMBOLIC_NAME));
     private final Path versionNamePart = mock(Path.class, withSettings().name(ANY_VERSION));
+    private Path relativePath = mock(Path.class);
     private BundleDeterminator determinator;
 
     @Before
@@ -55,31 +55,41 @@ public class BundleDeterminatorTest {
     }
 
     @Test
-    public void determinePathToShort() {
+    public void determinePathToShort() throws Exception {
         when(relativePath.getNameCount()).thenReturn(1);
         assertSame(systemBundle, determinator.determine(relativePath));
     }
 
     @Test
-    public void determinePathDoesNotStartWithPrefix() {
+    public void determinePathDoesNotStartWithPrefix() throws Exception {
         determinator = new BundleDeterminator(context, "someDifferentPrefix");
         assertSame(systemBundle, determinator.determine(relativePath));
     }
 
     @Test
-    public void determineNoAppropriateUserBundleFound() {
+    public void determineNoAppropriateUserBundleFound() throws Exception {
         when(userBundle.getSymbolicName()).thenReturn("someDifferentSymbolicName");
-        assertSame(systemBundle, determinator.determine(relativePath));
+        try {
+            determinator.determine(relativePath);
+            fail("Exception expected");
+        } catch (final BundleDeterminationException e) {
+            assertEquals(NoSuchElementException.class, e.getCause().getClass());
+        }
     }
 
     @Test
-    public void determineVersionNotParsable() {
+    public void determineVersionNotParsable() throws Exception {
         when(relativePath.getName(1)).thenReturn(mock(Path.class));
-        assertSame(systemBundle, determinator.determine(relativePath));
+        try {
+            determinator.determine(relativePath);
+            fail("Exception expected");
+        } catch (final BundleDeterminationException e) {
+            assertEquals(IllegalArgumentException.class, e.getCause().getClass());
+        }
     }
 
     @Test
-    public void determine() {
+    public void determine() throws Exception {
         assertSame(userBundle, determinator.determine(relativePath));
 
         // Should have been called exactly once
@@ -87,12 +97,32 @@ public class BundleDeterminatorTest {
     }
 
     @Test
-    public void bundleStopped() {
+    public void clearCacheWholeBundleDirectory() throws Exception {
+        when(relativePath.getNameCount()).thenReturn(2);
         determinator.determine(relativePath);
-        determinator.bundleChanged(new BundleEvent(BundleEvent.STOPPED, userBundle));
+        when(relativePath.getNameCount()).thenReturn(1);
+        when(relativePath.startsWith(relativePath)).thenReturn(true);
+        determinator.clearCacheFor(relativePath);
+        when(relativePath.getNameCount()).thenReturn(2);
         determinator.determine(relativePath);
-
-        // Should have been called exactly twice
         verify(context, times(2)).getBundles();
+    }
+
+    @Test
+    public void clearCacheVersionDirectoryOnly() throws Exception {
+        when(relativePath.getNameCount()).thenReturn(2);
+        determinator.determine(relativePath);
+        determinator.clearCacheFor(relativePath);
+        determinator.determine(relativePath);
+        verify(context, times(2)).getBundles();
+    }
+
+    @Test
+    public void clearCacheNothingToDo() {
+        relativePath = mock(Path.class);
+        when(relativePath.getName(0)).thenReturn(relativePath);
+
+        // Should not cause an exception
+        determinator.clearCacheFor(relativePath);
     }
 }

@@ -20,13 +20,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static ch.sourcepond.io.hotdeployer.impl.BundleDeterminator.SPECIAL_BUNDLE_NAME_COUNT;
+import static java.lang.String.format;
 import static org.osgi.framework.Constants.SYSTEM_BUNDLE_ID;
 
 /**
  *
  */
 class KeyProvider implements KeyDeliveryHook {
-    private final ConcurrentMap<FileKey, ResourceKey> keys = new ConcurrentHashMap<>();
+    private final ConcurrentMap<FileKey, Object> keys = new ConcurrentHashMap<>();
     private final BundleDeterminator determinator;
 
     KeyProvider(final BundleDeterminator pDeterminator) {
@@ -35,8 +36,7 @@ class KeyProvider implements KeyDeliveryHook {
 
     private Path adjustRelativePath(final Bundle pBundle, final Path pRelativePath) {
         final Path adjustedRelativePath;
-        final Bundle bundle = determinator.determine(pRelativePath);
-        if (SYSTEM_BUNDLE_ID == bundle.getBundleId()) {
+        if (SYSTEM_BUNDLE_ID == pBundle.getBundleId()) {
             adjustedRelativePath = pRelativePath;
         } else {
             adjustedRelativePath = pRelativePath.getName(SPECIAL_BUNDLE_NAME_COUNT);
@@ -46,9 +46,12 @@ class KeyProvider implements KeyDeliveryHook {
 
     @Override
     public void before(final FileKey pKey) {
-        final Bundle bundle = determinator.determine(pKey.relativePath());
-        final ResourceKey key = new DefaultResourceKey(bundle, adjustRelativePath(bundle, pKey.relativePath()));
-        keys.put(pKey, key);
+        try {
+            final Bundle bundle = determinator.determine(pKey.relativePath());
+            keys.put(pKey, new DefaultResourceKey(bundle, adjustRelativePath(bundle, pKey.relativePath())));
+        } catch (final Exception e) {
+            keys.put(pKey, e);
+        }
     }
 
     @Override
@@ -56,7 +59,18 @@ class KeyProvider implements KeyDeliveryHook {
         keys.remove(pKey);
     }
 
-    ResourceKey getKey(final FileKey pKey) {
-        return keys.get(pKey);
+    @Override
+    public void afterDiscard(final FileKey pKey) {
+        after(pKey);
+        determinator.clearCacheFor(pKey.relativePath());
+    }
+
+    ResourceKey getKey(final FileKey pKey) throws ResourceKeyException {
+        final Object keyOrException = keys.get(pKey);
+
+        if (keyOrException instanceof Exception) {
+            throw new ResourceKeyException(format("File-key %s could not be adapted to a resource-key!", pKey), (Exception)keyOrException);
+        }
+        return (ResourceKey)keyOrException;
     }
 }
