@@ -48,11 +48,20 @@ public class DefaultResourceKeyTest {
     }
 
     @Test
+    public void isParentKey() {
+        assertFalse(secondKey.isParentKeyOf(firstKey));
+        secondKey = new DefaultResourceKey(firstBundle, secondPath);
+        assertFalse(secondKey.isParentKeyOf(firstKey));
+        when(secondPath.startsWith(firstPath)).thenReturn(true);
+        assertTrue(firstKey.isParentKeyOf(secondKey));
+    }
+
+    @Test
     public void isSubKey() {
         assertFalse(secondKey.isSubKeyOf(firstKey));
         secondKey = new DefaultResourceKey(firstBundle, secondPath);
         assertFalse(secondKey.isSubKeyOf(firstKey));
-        when(secondPath.startsWith(firstPath)).thenReturn(true);
+        when(firstPath.startsWith(secondPath)).thenReturn(true);
         assertTrue(firstKey.isSubKeyOf(secondKey));
     }
 

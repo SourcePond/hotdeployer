@@ -26,5 +26,7 @@ public interface ResourceKey {
 
     Bundle getSource();
 
+    boolean isParentKeyOf(ResourceKey pOther);
+
     boolean isSubKeyOf(ResourceKey pOther);
 }

@@ -43,9 +43,15 @@ final class DefaultResourceKey implements ResourceKey {
     }
 
     @Override
-    public boolean isSubKeyOf(final ResourceKey pOther) {
+    public boolean isParentKeyOf(final ResourceKey pOther) {
         requireNonNull(pOther, "Other key is null");
         return getSource().equals(pOther.getSource()) && pOther.getRelativePath().startsWith(getRelativePath());
+    }
+
+    @Override
+    public boolean isSubKeyOf(final ResourceKey pOther) {
+        requireNonNull(pOther, "Other key is null");
+        return getSource().equals(pOther.getSource()) && getRelativePath().startsWith(pOther.getRelativePath());
     }
 
     @Override
