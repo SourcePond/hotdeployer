@@ -18,7 +18,7 @@ import org.osgi.framework.Bundle;
 import java.nio.file.Path;
 
 /**
- * Created by rolandhauser on 04.04.17.
+ *
  */
 public interface ResourceKey {
 
