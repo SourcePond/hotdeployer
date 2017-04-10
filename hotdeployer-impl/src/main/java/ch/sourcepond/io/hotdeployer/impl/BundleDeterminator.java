@@ -13,7 +13,6 @@ package ch.sourcepond.io.hotdeployer.impl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
-import org.slf4j.Logger;
 
 import java.nio.file.Path;
 import java.util.NoSuchElementException;
@@ -23,13 +22,11 @@ import java.util.concurrent.ConcurrentMap;
 import static java.lang.String.format;
 import static org.osgi.framework.Constants.SYSTEM_BUNDLE_ID;
 import static org.osgi.framework.Version.valueOf;
-import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  *
  */
 class BundleDeterminator {
-    private static Logger LOG = getLogger(BundleDeterminator.class);
     private static final int SYMBOLIC_NAME_INDEX = 0;
     private static final int VERSION_INDEX = 1;
     static final int SPECIAL_BUNDLE_NAME_COUNT = 2;
