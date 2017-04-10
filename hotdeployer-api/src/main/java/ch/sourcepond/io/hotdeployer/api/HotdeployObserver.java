@@ -23,8 +23,6 @@ import java.nio.file.Path;
  */
 public interface HotdeployObserver {
 
-    void bundleStopped(ResourceKey pKey);
-
     /**
      * <p>
      * Indicates, that the file specified has been modified. Modified means,
