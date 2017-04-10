@@ -56,7 +56,7 @@ class BundleDeterminator implements BundleListener {
     private Bundle findBundle(final Path pBundleKey) {
         Bundle bundle = null;
         try {
-            final String symbolicName = pBundleKey.getName(0).getFileName().toString().substring(prefix.length());
+            final String symbolicName = pBundleKey.getName(0).toString().substring(prefix.length());
             final Version version = valueOf(pBundleKey.getName(1).toString());
 
             for (final Bundle current : context.getBundles()) {
