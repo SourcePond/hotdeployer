@@ -10,6 +10,7 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl;
 
+import ch.sourcepond.io.fileobserver.api.FileKey;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
 
@@ -18,8 +19,7 @@ import java.nio.file.Path;
 import static java.lang.String.format;
 import static java.util.Objects.hash;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  *
@@ -27,10 +27,12 @@ import static org.mockito.Mockito.when;
 public class DefaultResourceKeyTest {
     private final Bundle firstBundle = mock(Bundle.class);
     private final Bundle secondBundle = mock(Bundle.class);
-    private final Path firstPath = mock(Path.class);
+    private final Path firstPath = mock(Path.class, withSettings().name("root"));
     private final Path secondPath = mock(Path.class);
-    private final DefaultResourceKey firstKey = new DefaultResourceKey(firstBundle, firstPath);
-    private DefaultResourceKey secondKey = new DefaultResourceKey(secondBundle, secondPath);
+    private final FileKey firstFileKey = mock(FileKey.class);
+    private final FileKey secondFileKey = mock(FileKey.class);
+    private final DefaultResourceKey firstKey = new DefaultResourceKey(firstFileKey, firstBundle, firstPath);
+    private DefaultResourceKey secondKey = new DefaultResourceKey(secondFileKey, secondBundle, secondPath);
 
     @Test
     public void getRelativePath() {
@@ -39,7 +41,7 @@ public class DefaultResourceKeyTest {
 
     @Test
     public void getSource() {
-        assertSame(firstBundle, firstKey.getSource());
+        assertSame(firstBundle, firstKey.getDirectoryKey());
     }
 
     @Test(expected = NullPointerException.class)
@@ -50,7 +52,7 @@ public class DefaultResourceKeyTest {
     @Test
     public void isParentKey() {
         assertFalse(secondKey.isParentKeyOf(firstKey));
-        secondKey = new DefaultResourceKey(firstBundle, secondPath);
+        secondKey = new DefaultResourceKey(secondFileKey, firstBundle, secondPath);
         assertFalse(secondKey.isParentKeyOf(firstKey));
         when(secondPath.startsWith(firstPath)).thenReturn(true);
         assertTrue(firstKey.isParentKeyOf(secondKey));
@@ -59,7 +61,7 @@ public class DefaultResourceKeyTest {
     @Test
     public void isSubKey() {
         assertFalse(secondKey.isSubKeyOf(firstKey));
-        secondKey = new DefaultResourceKey(firstBundle, secondPath);
+        secondKey = new DefaultResourceKey(secondFileKey, firstBundle, secondPath);
         assertFalse(secondKey.isSubKeyOf(firstKey));
         when(firstPath.startsWith(secondPath)).thenReturn(true);
         assertTrue(firstKey.isSubKeyOf(secondKey));
@@ -71,11 +73,11 @@ public class DefaultResourceKeyTest {
         assertFalse(firstKey.equals(null));
         assertFalse(firstKey.equals(new Object()));
         assertFalse(firstKey.equals(secondKey));
-        secondKey = new DefaultResourceKey(secondBundle, firstPath);
+        secondKey = new DefaultResourceKey(secondFileKey, secondBundle, firstPath);
         assertFalse(firstKey.equals(secondKey));
-        secondKey = new DefaultResourceKey(firstBundle, secondPath);
+        secondKey = new DefaultResourceKey(secondFileKey, firstBundle, secondPath);
         assertFalse(firstKey.equals(secondKey));
-        secondKey = new DefaultResourceKey(firstBundle, firstPath);
+        secondKey = new DefaultResourceKey(secondFileKey, firstBundle, firstPath);
         assertTrue(firstKey.equals(secondKey));
     }
 

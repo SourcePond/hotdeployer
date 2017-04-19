@@ -30,6 +30,7 @@ import static org.osgi.framework.Version.valueOf;
 public class BundleDeterminatorTest {
     private static final String ANY_PREFIX = "anyPrefix_";
     private static final String ANY_SYMBOLIC_NAME = "anySymbolicName";
+    private static final String ANY_VERSION_RANGE = "[1.2,1.3)";
     private static final String ANY_VERSION = "1.2.3";
     private final Version version = valueOf(ANY_VERSION);
     private final BundleContext context = mock(BundleContext.class);
@@ -37,7 +38,7 @@ public class BundleDeterminatorTest {
     private final Bundle systemBundle = mock(Bundle.class);
     private final Bundle[] bundles = new Bundle[]{systemBundle, userBundle};
     private final Path symbolicNamePart = mock(Path.class, withSettings().name(ANY_PREFIX + ANY_SYMBOLIC_NAME));
-    private final Path versionNamePart = mock(Path.class, withSettings().name(ANY_VERSION));
+    private final Path versionNamePart = mock(Path.class, withSettings().name(ANY_VERSION_RANGE));
     private Path relativePath = mock(Path.class);
     private BundleDeterminator determinator;
 
@@ -51,7 +52,8 @@ public class BundleDeterminatorTest {
         when(relativePath.getName(0)).thenReturn(symbolicNamePart);
         when(relativePath.getName(1)).thenReturn(versionNamePart);
         when(relativePath.subpath(0, 2)).thenReturn(relativePath);
-        determinator = new BundleDeterminator(context, ANY_PREFIX);
+        determinator = new BundleDeterminator(context);
+        determinator.setPrefix(ANY_PREFIX);
     }
 
     @Test
@@ -62,7 +64,7 @@ public class BundleDeterminatorTest {
 
     @Test
     public void determinePathDoesNotStartWithPrefix() throws Exception {
-        determinator = new BundleDeterminator(context, "someDifferentPrefix");
+        determinator.setPrefix("someDifferentPrefix");
         assertSame(systemBundle, determinator.determine(relativePath));
     }
 

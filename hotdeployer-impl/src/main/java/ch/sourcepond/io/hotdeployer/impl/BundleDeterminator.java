@@ -12,7 +12,7 @@ package ch.sourcepond.io.hotdeployer.impl;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Version;
+import org.osgi.framework.VersionRange;
 
 import java.nio.file.Path;
 import java.util.NoSuchElementException;
@@ -21,7 +21,6 @@ import java.util.concurrent.ConcurrentMap;
 
 import static java.lang.String.format;
 import static org.osgi.framework.Constants.SYSTEM_BUNDLE_ID;
-import static org.osgi.framework.Version.valueOf;
 
 /**
  *
@@ -33,14 +32,21 @@ class BundleDeterminator {
     private static final int WHOLE_BUNDLE_DIRECTORY = 1;
     private static final int VERSION_DIRECTORY_ONLY = 2;
     private final ConcurrentMap<Path, Bundle> bundles = new ConcurrentHashMap<>();
-    private final String prefix;
     private final BundleContext context;
     private final Bundle systemBundle;
+    private volatile String prefix;
 
-    BundleDeterminator(final BundleContext pContext, final String pPrefix) {
+    BundleDeterminator(final BundleContext pContext) {
         context = pContext;
-        prefix = pPrefix;
         systemBundle = pContext.getBundle(SYSTEM_BUNDLE_ID);
+    }
+
+    String getPrefix() {
+        return prefix;
+    }
+
+    void setPrefix(final String pPrefix) {
+        prefix = pPrefix;
     }
 
     private boolean isBoundToBundle(final Path pRelativePath) {
@@ -69,12 +75,13 @@ class BundleDeterminator {
     private Bundle findBundle(final Path pBundleKey) {
         Bundle bundle = null;
         final String symbolicName = pBundleKey.getName(SYMBOLIC_NAME_INDEX).toString().substring(prefix.length());
-        final Version version = valueOf(pBundleKey.getName(VERSION_INDEX).toString());
+        final VersionRange versionRange = VersionRange.valueOf(pBundleKey.getName(VERSION_INDEX).toString());
 
         for (final Bundle current : context.getBundles()) {
-            if (symbolicName.equals(current.getSymbolicName()) && version.equals(current.getVersion())) {
+            if (symbolicName.equals(current.getSymbolicName()) &&
+                    versionRange.includes(current.getVersion()) &&
+                    (bundle == null || current.getVersion().compareTo(bundle.getVersion()) > 0)) {
                 bundle = current;
-                break;
             }
         }
 
@@ -82,7 +89,7 @@ class BundleDeterminator {
             throw new NoSuchElementException(format("No bundle found with symbolic-name %s and version %s!\n" +
                     "The bundle may have been uninstalled. If you still need its resources, move them into\n" +
                     "a top-level directory because %s is not valid anymore, or, re-install the bundle.",
-                    symbolicName, version, pBundleKey));
+                    symbolicName, versionRange, pBundleKey));
         }
 
         return bundle;

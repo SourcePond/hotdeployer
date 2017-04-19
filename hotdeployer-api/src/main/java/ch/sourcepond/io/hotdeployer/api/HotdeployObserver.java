@@ -13,6 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.api;
 
+import ch.sourcepond.io.fileobserver.api.FileKey;
+import ch.sourcepond.io.fileobserver.api.SimpleDispatchRestriction;
+import org.osgi.framework.Bundle;
+
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -22,6 +26,10 @@ import java.nio.file.Path;
  * <p><em>Implementations of this interface must be thread-safe.</em></p>
  */
 public interface HotdeployObserver {
+
+    default void setup(SimpleDispatchRestriction pRestriction) {
+        // noop by default
+    }
 
     /**
      * <p>
@@ -48,7 +56,7 @@ public interface HotdeployObserver {
      * @param pFile         Readable path, never {@code null}
      * @throws IOException Thrown, if the modified path could not be read.
      */
-    void modified(ResourceKey pKey, Path pFile) throws IOException;
+    void modified(FileKey<Bundle> pKey, Path pFile) throws IOException;
 
     /**
      * <p>Indicates, that the file or directory with the relative path specified has been discarded for some reason
@@ -68,5 +76,5 @@ public interface HotdeployObserver {
      *
      * @param pKey Relative path of the discarded file or directory, never {@code null}
      */
-    void discard(ResourceKey pKey);
+    void discard(FileKey<Bundle> pKey);
 }

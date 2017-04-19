@@ -22,6 +22,8 @@ import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -37,6 +39,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 public class Activator {
     private static final Logger LOG = getLogger(Activator.class);
     private final DirectoryFactory directoryFactory;
+    private volatile Config config;
     private BundleDeterminator bundleDeterminator;
     private KeyProvider keyProvider;
     private WatchedDirectory watchedDirectory;
@@ -58,9 +61,11 @@ public class Activator {
     @Activate
     public void activate(final BundleContext pContext, final Config pConfig) throws IOException, URISyntaxException {
         context = pContext;
+        config = pConfig;
         watchedDirectory = directoryFactory.newWatchedDirectory(pConfig);
         watchedDirectoryRegistration = pContext.registerService(WatchedDirectory.class, watchedDirectory, null);
-        bundleDeterminator = new BundleDeterminator(pContext, pConfig.bundleResourceDirectoryPrefix());
+        bundleDeterminator = new BundleDeterminator(pContext);
+        bundleDeterminator.setPrefix(pConfig.bundleResourceDirectoryPrefix());
         keyProvider = new KeyProvider(bundleDeterminator);
         hookRegistration = pContext.registerService(KeyDeliveryHook.class, keyProvider, null);
         LOG.info("Activator started");
@@ -68,7 +73,16 @@ public class Activator {
 
     @Modified
     public void modify(final Config pConfig) throws IOException, URISyntaxException {
+        bundleDeterminator.setPrefix(pConfig.bundleResourceDirectoryPrefix());
         watchedDirectory.relocate(directoryFactory.getHotdeployDir(pConfig));
+        final Config previousConfig = config;
+        config = pConfig;
+
+        if (!pConfig.bundleResourceDirectoryPrefix().equals(previousConfig.bundleResourceDirectoryPrefix())) {
+            final Collection<HotdeployObserver> toBeRegistered = new ArrayList<>(observers.keySet());
+            unregisterAllObservers();
+            toBeRegistered.forEach(this::addObserver);
+        }
     }
 
     @Deactivate
@@ -80,11 +94,16 @@ public class Activator {
         LOG.info("Activator shutdown");
     }
 
+    private void unregisterAllObservers() {
+        observers.forEach((k, v) -> v.unregister());
+        observers.clear();
+    }
+
     @Reference(policy = DYNAMIC, cardinality = MULTIPLE)
     public void addObserver(final HotdeployObserver pObserver) {
         observers.put(pObserver, context.registerService(
                 FileObserver.class,
-                new ObserverAdapter(keyProvider, pObserver),
+                new ObserverAdapter(config.bundleResourceDirectoryPrefix(), keyProvider, pObserver),
                 null));
     }
 

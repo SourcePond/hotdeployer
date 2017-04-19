@@ -10,24 +10,28 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl;
 
-import ch.sourcepond.io.hotdeployer.api.ResourceKey;
+import ch.sourcepond.io.fileobserver.api.FileKey;
 import org.osgi.framework.Bundle;
 
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Objects;
 
 import static java.lang.String.format;
 import static java.util.Objects.hash;
-import static java.util.Objects.requireNonNull;
 
 /**
  *
  */
-final class DefaultResourceKey implements ResourceKey {
+final class DefaultResourceKey implements FileKey<Bundle> {
+    private final FileKey fileKey;
     private final Bundle source;
     private final Path relativePath;
 
-    DefaultResourceKey(final Bundle pSource, final Path pRelativePath) {
+    DefaultResourceKey(final FileKey pFileKey,
+                       final Bundle pSource,
+                       final Path pRelativePath) {
+        fileKey = pFileKey;
         source = pSource;
         relativePath = pRelativePath;
     }
@@ -38,20 +42,28 @@ final class DefaultResourceKey implements ResourceKey {
     }
 
     @Override
-    public Bundle getSource() {
+    public Bundle getDirectoryKey() {
         return source;
     }
 
     @Override
-    public boolean isParentKeyOf(final ResourceKey pOther) {
-        requireNonNull(pOther, "Other key is null");
-        return getSource().equals(pOther.getSource()) && pOther.getRelativePath().startsWith(getRelativePath());
+    public boolean isParentKeyOf(final FileKey pOther) {
+        return fileKey.isParentKeyOf(pOther);
     }
 
     @Override
-    public boolean isSubKeyOf(final ResourceKey pOther) {
-        requireNonNull(pOther, "Other key is null");
-        return getSource().equals(pOther.getSource()) && getRelativePath().startsWith(pOther.getRelativePath());
+    public boolean isSubKeyOf(final FileKey pOther) {
+        return fileKey.isSubKeyOf(pOther);
+    }
+
+    @Override
+    public Collection<FileKey<Bundle>> findSubKeys(final Collection<FileKey<?>> pKeys) {
+        return fileKey.findSubKeys(pKeys);
+    }
+
+    @Override
+    public void removeSubKeys(final Collection<FileKey<?>> pKeys) {
+        fileKey.removeSubKeys(pKeys);
     }
 
     @Override
@@ -63,13 +75,13 @@ final class DefaultResourceKey implements ResourceKey {
             return false;
         }
         final DefaultResourceKey that = (DefaultResourceKey) o;
-        return Objects.equals(source, that.source) &&
-                Objects.equals(relativePath, that.relativePath);
+        return Objects.equals(fileKey, that.fileKey) &&
+                Objects.equals(source, that.source);
     }
 
     @Override
     public int hashCode() {
-        return hash(source, relativePath);
+        return hash(fileKey, source);
     }
 
     @Override

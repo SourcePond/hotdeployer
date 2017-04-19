@@ -11,7 +11,6 @@ limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl;
 
 import ch.sourcepond.io.fileobserver.api.FileKey;
-import ch.sourcepond.io.hotdeployer.api.ResourceKey;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
@@ -31,13 +30,13 @@ public class KeyProviderTest {
     private final Path relativePath = mock(Path.class);
     private final Path adjustedRelativePath = mock(Path.class);
     private final Bundle bundle = mock(Bundle.class);
-    private final FileKey fileKey = mock(FileKey.class);
+    private final FileKey<Object> fileKey = mock(FileKey.class);
     private final BundleDeterminator determinator = mock(BundleDeterminator.class);
     private final KeyProvider provider = new KeyProvider(determinator);
 
     @Before
     public void setup() throws Exception {
-        when(fileKey.relativePath()).thenReturn(relativePath);
+        when(fileKey.getRelativePath()).thenReturn(relativePath);
         when(determinator.determine(relativePath)).thenReturn(bundle);
         when(bundle.getBundleId()).thenReturn(10l);
         when(relativePath.getName(SPECIAL_BUNDLE_NAME_COUNT)).thenReturn(adjustedRelativePath);
@@ -46,10 +45,10 @@ public class KeyProviderTest {
     @Test
     public void useAdjustedRelativePath() throws Exception {
         provider.before(fileKey);
-        final ResourceKey key = provider.getKey(fileKey);
+        final FileKey<Bundle> key = provider.getKey(fileKey);
         assertNotNull(key);
         assertSame(adjustedRelativePath, key.getRelativePath());
-        assertSame(bundle, key.getSource());
+        assertSame(bundle, key.getDirectoryKey());
         provider.afterDiscard(fileKey);
         assertNull(provider.getKey(fileKey));
     }
@@ -58,10 +57,10 @@ public class KeyProviderTest {
     public void useOriginalRelativePath() throws Exception {
         when(bundle.getBundleId()).thenReturn(SYSTEM_BUNDLE_ID);
         provider.before(fileKey);
-        final ResourceKey key = provider.getKey(fileKey);
+        final FileKey<Bundle> key = provider.getKey(fileKey);
         assertNotNull(key);
         assertSame(relativePath, key.getRelativePath());
-        assertSame(bundle, key.getSource());
+        assertSame(bundle, key.getDirectoryKey());
         provider.afterDiscard(fileKey);
         assertNull(provider.getKey(fileKey));
     }

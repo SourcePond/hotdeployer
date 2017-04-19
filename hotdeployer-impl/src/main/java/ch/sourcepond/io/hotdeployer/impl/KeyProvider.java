@@ -12,7 +12,6 @@ package ch.sourcepond.io.hotdeployer.impl;
 
 import ch.sourcepond.io.fileobserver.api.FileKey;
 import ch.sourcepond.io.fileobserver.api.KeyDeliveryHook;
-import ch.sourcepond.io.hotdeployer.api.ResourceKey;
 import org.osgi.framework.Bundle;
 
 import java.nio.file.Path;
@@ -39,7 +38,7 @@ class KeyProvider implements KeyDeliveryHook {
         if (SYSTEM_BUNDLE_ID == pBundle.getBundleId()) {
             adjustedRelativePath = pRelativePath;
         } else {
-            adjustedRelativePath = pRelativePath.getName(SPECIAL_BUNDLE_NAME_COUNT);
+            adjustedRelativePath = pRelativePath.subpath(SPECIAL_BUNDLE_NAME_COUNT, pRelativePath.getNameCount());
         }
         return adjustedRelativePath;
     }
@@ -47,8 +46,10 @@ class KeyProvider implements KeyDeliveryHook {
     @Override
     public void before(final FileKey pKey) {
         try {
-            final Bundle bundle = determinator.determine(pKey.relativePath());
-            keys.put(pKey, new DefaultResourceKey(bundle, adjustRelativePath(bundle, pKey.relativePath())));
+            final Bundle bundle = determinator.determine(pKey.getRelativePath());
+            keys.put(pKey, new DefaultResourceKey(pKey,
+                    bundle,
+                    adjustRelativePath(bundle, pKey.getRelativePath())));
         } catch (final Exception e) {
             keys.put(pKey, e);
         }
@@ -62,15 +63,15 @@ class KeyProvider implements KeyDeliveryHook {
     @Override
     public void afterDiscard(final FileKey pKey) {
         after(pKey);
-        determinator.clearCacheFor(pKey.relativePath());
+        determinator.clearCacheFor(pKey.getRelativePath());
     }
 
-    ResourceKey getKey(final FileKey pKey) throws ResourceKeyException {
+    FileKey<Bundle> getKey(final FileKey pKey) throws ResourceKeyException {
         final Object keyOrException = keys.get(pKey);
 
         if (keyOrException instanceof Exception) {
             throw new ResourceKeyException(format("File-key %s could not be adapted to a resource-key!", pKey), (Exception)keyOrException);
         }
-        return (ResourceKey)keyOrException;
+        return (FileKey<Bundle>) keyOrException;
     }
 }

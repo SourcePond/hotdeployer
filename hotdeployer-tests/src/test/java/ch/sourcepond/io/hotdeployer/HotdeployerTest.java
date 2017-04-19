@@ -10,8 +10,8 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.io.hotdeployer;
 
+import ch.sourcepond.io.fileobserver.api.FileKey;
 import ch.sourcepond.io.hotdeployer.api.HotdeployObserver;
-import ch.sourcepond.io.hotdeployer.api.ResourceKey;
 import ch.sourcepond.testing.BundleContextClassLoaderRule;
 import org.junit.After;
 import org.junit.Before;
@@ -126,11 +126,11 @@ public class HotdeployerTest {
         });
     }
 
-    private ResourceKey key(final Path pRelativePath, final Bundle pSource) {
-        return argThat(new ArgumentMatcher<ResourceKey>() {
+    private FileKey<Bundle> key(final Path pRelativePath, final Bundle pSource) {
+        return argThat(new ArgumentMatcher<FileKey<Bundle>>() {
             @Override
-            public boolean matches(final ResourceKey key) {
-                return pRelativePath.equals(key.getRelativePath()) && pSource.equals(key.getSource());
+            public boolean matches(final FileKey<Bundle> key) {
+                return pRelativePath.equals(key.getRelativePath()) && pSource.equals(key.getDirectoryKey());
             }
 
             @Override

@@ -12,9 +12,9 @@ package ch.sourcepond.io.hotdeployer.impl;
 
 import ch.sourcepond.io.fileobserver.api.FileKey;
 import ch.sourcepond.io.hotdeployer.api.HotdeployObserver;
-import ch.sourcepond.io.hotdeployer.api.ResourceKey;
 import org.junit.Before;
 import org.junit.Test;
+import org.osgi.framework.Bundle;
 
 import java.nio.file.Path;
 
@@ -24,12 +24,13 @@ import static org.mockito.Mockito.*;
  *
  */
 public class ObserverAdapterTest {
-    private final FileKey fileKey = mock(FileKey.class);
-    private final ResourceKey resourceKey = mock(ResourceKey.class);
+    private static final String ANY_PREFIX = "anyPrefix";
+    private final FileKey<Object> fileKey = mock(FileKey.class);
+    private final FileKey<Bundle> resourceKey = mock(FileKey.class);
     private final KeyProvider provider = mock(KeyProvider.class);
     private final HotdeployObserver hotdeployObserver = mock(HotdeployObserver.class);
     private final Path file = mock(Path.class);
-    private final ObserverAdapter adapter = new ObserverAdapter(provider, hotdeployObserver);
+    private final ObserverAdapter adapter = new ObserverAdapter(ANY_PREFIX, provider, hotdeployObserver);
 
     @Before
     public void setup() throws Exception {
