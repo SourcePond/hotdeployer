@@ -12,6 +12,8 @@ package ch.sourcepond.io.hotdeployer.impl;
 
 import ch.sourcepond.io.fileobserver.api.FileKey;
 import ch.sourcepond.io.hotdeployer.api.FileChangeObserver;
+import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
+import ch.sourcepond.io.hotdeployer.impl.key.ResourceKeyException;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.Bundle;

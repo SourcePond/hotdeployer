@@ -8,24 +8,25 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.*/
-package ch.sourcepond.io.hotdeployer.impl;
+package ch.sourcepond.io.hotdeployer.impl.key;
 
 import ch.sourcepond.io.fileobserver.api.FileKey;
 import ch.sourcepond.io.fileobserver.api.KeyDeliveryHook;
+import ch.sourcepond.io.hotdeployer.impl.determinator.BundleDeterminator;
 import org.osgi.framework.Bundle;
 
 import java.nio.file.Path;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import static ch.sourcepond.io.hotdeployer.impl.BundleDeterminator.SPECIAL_BUNDLE_NAME_COUNT;
+import static ch.sourcepond.io.hotdeployer.impl.determinator.BundleDeterminator.SPECIAL_BUNDLE_NAME_COUNT;
 import static java.lang.String.format;
 import static org.osgi.framework.Constants.SYSTEM_BUNDLE_ID;
 
 /**
  *
  */
-class KeyProvider implements KeyDeliveryHook {
+public class KeyProvider implements KeyDeliveryHook {
     private final ConcurrentMap<FileKey, Object> keys = new ConcurrentHashMap<>();
     private final BundleDeterminator determinator;
 
@@ -66,7 +67,7 @@ class KeyProvider implements KeyDeliveryHook {
         determinator.clearCacheFor(pKey.getRelativePath());
     }
 
-    FileKey<Bundle> getKey(final FileKey pKey) throws ResourceKeyException {
+    public FileKey<Bundle> getKey(final FileKey pKey) throws ResourceKeyException {
         final Object keyOrException = keys.get(pKey);
 
         if (keyOrException instanceof Exception) {

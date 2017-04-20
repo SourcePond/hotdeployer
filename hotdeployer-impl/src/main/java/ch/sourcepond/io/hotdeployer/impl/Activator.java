@@ -14,6 +14,10 @@ import ch.sourcepond.io.fileobserver.api.FileObserver;
 import ch.sourcepond.io.fileobserver.api.KeyDeliveryHook;
 import ch.sourcepond.io.fileobserver.spi.WatchedDirectory;
 import ch.sourcepond.io.hotdeployer.api.FileChangeObserver;
+import ch.sourcepond.io.hotdeployer.impl.determinator.BundleDeterminator;
+import ch.sourcepond.io.hotdeployer.impl.determinator.BundleDeterminatorFactory;
+import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
+import ch.sourcepond.io.hotdeployer.impl.key.KeyProviderFactory;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.*;
@@ -39,6 +43,8 @@ import static org.slf4j.LoggerFactory.getLogger;
 public class Activator {
     private static final Logger LOG = getLogger(Activator.class);
     private final DirectoryFactory directoryFactory;
+    private final BundleDeterminatorFactory bundleDeterminatorFactory;
+    private final KeyProviderFactory keyProviderFactory;
     private volatile Config config;
     private BundleDeterminator bundleDeterminator;
     private KeyProvider keyProvider;
@@ -50,12 +56,18 @@ public class Activator {
 
     // Constructor for OSGi DS
     public Activator() {
-        this(new DirectoryFactory());
+        this(new BundleDeterminatorFactory(),
+                new DirectoryFactory(),
+                new KeyProviderFactory());
     }
 
     // Constructor for testing
-    Activator(final DirectoryFactory pDirectoryFactory) {
+    Activator(final BundleDeterminatorFactory pBundleDeterminatorFactory,
+              final DirectoryFactory pDirectoryFactory,
+              final KeyProviderFactory pKeyProviderFactory) {
+        bundleDeterminatorFactory = pBundleDeterminatorFactory;
         directoryFactory = pDirectoryFactory;
+        keyProviderFactory = pKeyProviderFactory;
     }
 
     @Activate
@@ -64,24 +76,32 @@ public class Activator {
         config = pConfig;
         watchedDirectory = directoryFactory.newWatchedDirectory(pConfig);
         watchedDirectoryRegistration = pContext.registerService(WatchedDirectory.class, watchedDirectory, null);
-        bundleDeterminator = new BundleDeterminator(pContext);
+        bundleDeterminator = bundleDeterminatorFactory.createDeterminator(pContext);
         bundleDeterminator.setPrefix(pConfig.bundleResourceDirectoryPrefix());
-        keyProvider = new KeyProvider(bundleDeterminator);
+        keyProvider = keyProviderFactory.createProvider(bundleDeterminator);
         hookRegistration = pContext.registerService(KeyDeliveryHook.class, keyProvider, null);
         LOG.info("Activator started");
     }
 
     @Modified
     public void modify(final Config pConfig) throws IOException, URISyntaxException {
-        bundleDeterminator.setPrefix(pConfig.bundleResourceDirectoryPrefix());
-        watchedDirectory.relocate(directoryFactory.getHotdeployDir(pConfig));
-        final Config previousConfig = config;
+        final String previousPrefix = config.bundleResourceDirectoryPrefix();
+        final String newPrefix = pConfig.bundleResourceDirectoryPrefix();
         config = pConfig;
+        final Collection<FileChangeObserver> toBeRegistered = previousPrefix.equals(newPrefix) ? null :
+                new ArrayList<>(observers.keySet());
 
-        if (!pConfig.bundleResourceDirectoryPrefix().equals(previousConfig.bundleResourceDirectoryPrefix())) {
-            final Collection<FileChangeObserver> toBeRegistered = new ArrayList<>(observers.keySet());
+        if (toBeRegistered != null) {
+            bundleDeterminator.setPrefix(newPrefix);
             unregisterAllObservers();
-            toBeRegistered.forEach(this::addObserver);
+        }
+
+        try {
+            watchedDirectory.relocate(directoryFactory.getHotdeployDir(pConfig));
+        } finally {
+            if (toBeRegistered != null) {
+                toBeRegistered.forEach(this::addObserver);
+            }
         }
     }
 

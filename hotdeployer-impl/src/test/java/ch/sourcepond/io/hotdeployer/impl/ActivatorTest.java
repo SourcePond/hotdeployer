@@ -14,6 +14,10 @@ import ch.sourcepond.io.fileobserver.api.FileObserver;
 import ch.sourcepond.io.fileobserver.api.KeyDeliveryHook;
 import ch.sourcepond.io.fileobserver.spi.WatchedDirectory;
 import ch.sourcepond.io.hotdeployer.api.FileChangeObserver;
+import ch.sourcepond.io.hotdeployer.impl.determinator.BundleDeterminator;
+import ch.sourcepond.io.hotdeployer.impl.determinator.BundleDeterminatorFactory;
+import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
+import ch.sourcepond.io.hotdeployer.impl.key.KeyProviderFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
@@ -28,7 +32,12 @@ import static org.mockito.Mockito.*;
  */
 public class ActivatorTest {
     private static final String ANY_PREFIX = "$BUNDLE$_";
+    private static final String DIFFERENT_PREFIX = "$DIFFERENT$_";
     private final Path hotdeployDir = mock(Path.class);
+    private final KeyProviderFactory keyProviderFactory = mock(KeyProviderFactory.class);
+    private final KeyProvider keyProvider = mock(KeyProvider.class);
+    private final BundleDeterminatorFactory bundleDeterminatorFactory = mock(BundleDeterminatorFactory.class);
+    private final BundleDeterminator bundleDeterminator = mock(BundleDeterminator.class);
     private final DirectoryFactory directoryFactory = mock(DirectoryFactory.class);
     private final FileChangeObserver observer = mock(FileChangeObserver.class);
     private final WatchedDirectory watchedDirectory = mock(WatchedDirectory.class);
@@ -37,10 +46,12 @@ public class ActivatorTest {
     private final ServiceRegistration<FileObserver> observerAdapterRegistration = mock(ServiceRegistration.class);
     private final BundleContext context = mock(BundleContext.class);
     private final Config config = mock(Config.class);
-    private final Activator activator = new Activator(directoryFactory);
+    private final Activator activator = new Activator(bundleDeterminatorFactory, directoryFactory, keyProviderFactory);
 
     @Before
     public void setup() throws Exception {
+        when(keyProviderFactory.createProvider(bundleDeterminator)).thenReturn(keyProvider);
+        when(bundleDeterminatorFactory.createDeterminator(context)).thenReturn(bundleDeterminator);
         when(directoryFactory.getHotdeployDir(config)).thenReturn(hotdeployDir);
         when(config.bundleResourceDirectoryPrefix()).thenReturn(ANY_PREFIX);
         when(directoryFactory.newWatchedDirectory(config)).thenReturn(watchedDirectory);
@@ -67,8 +78,17 @@ public class ActivatorTest {
 
     @Test
     public void modify() throws Exception {
+        verify(bundleDeterminator).setPrefix(ANY_PREFIX);
         activator.modify(config);
         verify(watchedDirectory).relocate(hotdeployDir);
+        verifyZeroInteractions(observerAdapterRegistration);
+        verifyNoMoreInteractions(bundleDeterminator);
+    }
+
+    @Test
+    public void modifyPrefixChanged() throws Exception {
+        when(config.bundleResourceDirectoryPrefix()).thenReturn(DIFFERENT_PREFIX);
+        activator.modify(config);
     }
 
     @Test

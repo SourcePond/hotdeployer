@@ -8,14 +8,16 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.*/
-package ch.sourcepond.io.hotdeployer.impl;
+package ch.sourcepond.io.hotdeployer.impl.determinator;
+
+import org.osgi.framework.BundleContext;
 
 /**
  *
  */
-final class ResourceKeyException extends Exception {
+public class BundleDeterminatorFactory {
 
-    ResourceKeyException(final String pMessage, final Exception pCause) {
-        super(pMessage, pCause);
+    public BundleDeterminator createDeterminator(final BundleContext pContext) {
+        return new BundleDeterminator(pContext);
     }
 }

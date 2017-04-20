@@ -8,7 +8,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.*/
-package ch.sourcepond.io.hotdeployer.impl;
+package ch.sourcepond.io.hotdeployer.impl.determinator;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -25,10 +25,10 @@ import static org.osgi.framework.Constants.SYSTEM_BUNDLE_ID;
 /**
  *
  */
-class BundleDeterminator {
+public class BundleDeterminator {
+    public static final int SPECIAL_BUNDLE_NAME_COUNT = 2;
     private static final int SYMBOLIC_NAME_INDEX = 0;
     private static final int VERSION_INDEX = 1;
-    static final int SPECIAL_BUNDLE_NAME_COUNT = 2;
     private static final int WHOLE_BUNDLE_DIRECTORY = 1;
     private static final int VERSION_DIRECTORY_ONLY = 2;
     private final ConcurrentMap<Path, Bundle> bundles = new ConcurrentHashMap<>();
@@ -41,11 +41,7 @@ class BundleDeterminator {
         systemBundle = pContext.getBundle(SYSTEM_BUNDLE_ID);
     }
 
-    String getPrefix() {
-        return prefix;
-    }
-
-    void setPrefix(final String pPrefix) {
+    public void setPrefix(final String pPrefix) {
         prefix = pPrefix;
     }
 
@@ -57,7 +53,7 @@ class BundleDeterminator {
         return pRelativePath.subpath(SYMBOLIC_NAME_INDEX, SPECIAL_BUNDLE_NAME_COUNT);
     }
 
-    Bundle determine(final Path pRelativePath) throws BundleDeterminationException {
+    public Bundle determine(final Path pRelativePath) throws BundleDeterminationException {
         final Bundle bundle;
         if (pRelativePath.getNameCount() >= SPECIAL_BUNDLE_NAME_COUNT && isBoundToBundle(pRelativePath)) {
             try {
@@ -95,7 +91,7 @@ class BundleDeterminator {
         return bundle;
     }
 
-    void clearCacheFor(final Path pRelativePath) {
+    public void clearCacheFor(final Path pRelativePath) {
         if (isBoundToBundle(pRelativePath)) {
             if (WHOLE_BUNDLE_DIRECTORY == pRelativePath.getNameCount()) {
                 bundles.keySet().removeIf(p -> p.startsWith(pRelativePath));

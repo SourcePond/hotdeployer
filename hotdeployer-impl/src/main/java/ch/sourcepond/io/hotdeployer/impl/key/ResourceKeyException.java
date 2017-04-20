@@ -8,14 +8,14 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.*/
-package ch.sourcepond.io.hotdeployer.impl;
+package ch.sourcepond.io.hotdeployer.impl.key;
 
 /**
  *
  */
-final class BundleDeterminationException extends Exception {
+public final class ResourceKeyException extends Exception {
 
-    BundleDeterminationException(final Exception pCause) {
-        super(pCause.getMessage(), pCause);
+    public ResourceKeyException(final String pMessage, final Exception pCause) {
+        super(pMessage, pCause);
     }
 }

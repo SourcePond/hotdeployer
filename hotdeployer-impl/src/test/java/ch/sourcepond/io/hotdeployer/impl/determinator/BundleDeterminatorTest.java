@@ -8,8 +8,10 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.*/
-package ch.sourcepond.io.hotdeployer.impl;
+package ch.sourcepond.io.hotdeployer.impl.determinator;
 
+import ch.sourcepond.io.hotdeployer.impl.determinator.BundleDeterminationException;
+import ch.sourcepond.io.hotdeployer.impl.determinator.BundleDeterminator;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.Bundle;

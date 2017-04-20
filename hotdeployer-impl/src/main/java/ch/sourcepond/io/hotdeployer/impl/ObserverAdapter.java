@@ -14,6 +14,8 @@ import ch.sourcepond.io.fileobserver.api.DispatchRestriction;
 import ch.sourcepond.io.fileobserver.api.FileKey;
 import ch.sourcepond.io.fileobserver.api.FileObserver;
 import ch.sourcepond.io.hotdeployer.api.FileChangeObserver;
+import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
+import ch.sourcepond.io.hotdeployer.impl.key.ResourceKeyException;
 import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 
@@ -34,7 +36,7 @@ class ObserverAdapter implements FileObserver {
     private final FileChangeObserver fileChangeObserver;
 
     ObserverAdapter(final String pPrefix,
-                final KeyProvider pKeyProvider,
+                    final KeyProvider pKeyProvider,
                     final FileChangeObserver pFileChangeObserver) {
         prefix = pPrefix;
         keyProvider = pKeyProvider;
