@@ -25,25 +25,25 @@ class DispatchRestrictionProxy implements SimpleDispatchRestriction {
     static final String VERSION_RANGE_PATTERN = "^(\\d+(\\.\\d+(\\.\\d+(\\.[\\d\\w-]+)?)?)?)$|^" +
             "([\\[\\(]\\d+(\\.\\d+(\\.\\d+(\\.[\\d\\w-]+)?)?)?(,\\s*)?(\\d+(\\.\\d+(\\.\\d+(\\.[\\d\\w-]+)?)?)?)?" +
             "(\\]|\\)))$";
+    private static final char[] TO_BE_ESCAPED = {'\\', '^', '$', '.', '|', '?', '*', '+', '(', ')', '[', '{'};
     private final SimpleDispatchRestriction delegate;
     private final String bundlePrefixPattern;
 
     DispatchRestrictionProxy(final String pPrefix, final SimpleDispatchRestriction pDelegate) {
         delegate = pDelegate;
-        bundlePrefixPattern = "^" + escape(pPrefix, "\\^$.|?*+()[{") + ".*";
+        bundlePrefixPattern = "^" + escape(pPrefix) + ".*";
     }
 
-    private static String escape(final String pPrefix, final String pToBeEscaped) {
-        String result = pPrefix;
+    static String escape(final String pPrefix) {
         final StringBuilder builder = new StringBuilder(pPrefix);
-        for (final char toBeEscaped : pToBeEscaped.toCharArray()) {
+        for (final char toBeEscaped : TO_BE_ESCAPED) {
             for (int i = 0 ; i < builder.length() ; i++) {
                 if (builder.charAt(i) == toBeEscaped) {
                     builder.insert(i++, '\\');
                 }
             }
         }
-        return result;
+        return builder.toString();
     }
 
     @Override
