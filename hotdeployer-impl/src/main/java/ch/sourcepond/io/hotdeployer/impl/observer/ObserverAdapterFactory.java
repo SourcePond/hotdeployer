@@ -18,10 +18,22 @@ import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
  *
  */
 public class ObserverAdapterFactory {
+    private final DispatchRestrictionProxyFactory proxyFactory;
+
+    // Constructor for activator
+    public ObserverAdapterFactory() {
+        this(new DispatchRestrictionProxyFactory());
+    }
+
+
+    // Constructor for testing
+    ObserverAdapterFactory(final DispatchRestrictionProxyFactory pProxyFactory) {
+        proxyFactory = pProxyFactory;
+    }
 
     public FileObserver createAdapter(final String pPrefix,
                                       final KeyProvider pKeyProvider,
                                       final FileChangeObserver pFileChangeObserver) {
-        return new ObserverAdapter(pPrefix, pKeyProvider, pFileChangeObserver);
+        return new ObserverAdapter(pPrefix, proxyFactory, pKeyProvider, pFileChangeObserver);
     }
 }

@@ -35,7 +35,8 @@ public class KeyProviderTest {
     private final Bundle bundle = mock(Bundle.class);
     private final FileKey<Object> fileKey = mock(FileKey.class);
     private final BundleDeterminator determinator = mock(BundleDeterminator.class);
-    private final KeyProvider provider = new KeyProvider(determinator);
+    private final KeyProviderFactory factory = new KeyProviderFactory();
+    private final KeyProvider provider = factory.createProvider(determinator);
 
     @Before
     public void setup() throws Exception {

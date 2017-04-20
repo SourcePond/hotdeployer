@@ -32,7 +32,8 @@ public class DispatchRestrictionProxyTest {
     private static final String ANY_PATTERN = "anyPattern";
     private final PathMatcherBuilder builder = mock(PathMatcherBuilder.class);
     private final SimpleDispatchRestriction delegate = mock(SimpleDispatchRestriction.class);
-    private final DispatchRestrictionProxy proxy = new DispatchRestrictionProxy(ANY_PREFIX, delegate);
+    private final DispatchRestrictionProxyFactory factory = new DispatchRestrictionProxyFactory();
+    private final DispatchRestrictionProxy proxy = factory.createProxy(ANY_PREFIX, delegate);
 
     @Test
     public void verifyVersionRangePattern() {

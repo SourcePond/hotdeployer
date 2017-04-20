@@ -32,13 +32,16 @@ class ObserverAdapter implements FileObserver {
 
     private static final Logger LOG = getLogger(ObserverAdapter.class);
     private final String prefix;
+    private final DispatchRestrictionProxyFactory proxyFactory;
     private final KeyProvider keyProvider;
     private final FileChangeObserver fileChangeObserver;
 
     ObserverAdapter(final String pPrefix,
+                    final DispatchRestrictionProxyFactory pProxyFactory,
                     final KeyProvider pKeyProvider,
                     final FileChangeObserver pFileChangeObserver) {
         prefix = pPrefix;
+        proxyFactory = pProxyFactory;
         keyProvider = pKeyProvider;
         fileChangeObserver = pFileChangeObserver;
     }
@@ -46,7 +49,7 @@ class ObserverAdapter implements FileObserver {
     @Override
     public void setup(final DispatchRestriction pSetup) {
         pSetup.accept(DIRECTORY_KEY);
-        fileChangeObserver.setup(new DispatchRestrictionProxy(prefix, pSetup));
+        fileChangeObserver.setup(proxyFactory.createProxy(prefix, pSetup));
     }
 
     @Override
