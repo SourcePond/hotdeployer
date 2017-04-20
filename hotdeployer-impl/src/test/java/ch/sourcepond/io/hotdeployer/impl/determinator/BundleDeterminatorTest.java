@@ -10,8 +10,6 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl.determinator;
 
-import ch.sourcepond.io.hotdeployer.impl.determinator.BundleDeterminationException;
-import ch.sourcepond.io.hotdeployer.impl.determinator.BundleDeterminator;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
@@ -38,9 +36,10 @@ public class BundleDeterminatorTest {
     private final BundleContext context = mock(BundleContext.class);
     private final Bundle userBundle = mock(Bundle.class);
     private final Bundle systemBundle = mock(Bundle.class);
-    private final Bundle[] bundles = new Bundle[]{systemBundle, userBundle};
     private final Path symbolicNamePart = mock(Path.class, withSettings().name(ANY_PREFIX + ANY_SYMBOLIC_NAME));
-    private final Path versionNamePart = mock(Path.class, withSettings().name(ANY_VERSION_RANGE));
+    private final BundleDeterminatorFactory factory = new BundleDeterminatorFactory();
+    private Path versionNamePart = mock(Path.class, withSettings().name(ANY_VERSION_RANGE));
+    private Bundle[] bundles = new Bundle[]{systemBundle, userBundle};
     private Path relativePath = mock(Path.class);
     private BundleDeterminator determinator;
 
@@ -54,7 +53,7 @@ public class BundleDeterminatorTest {
         when(relativePath.getName(0)).thenReturn(symbolicNamePart);
         when(relativePath.getName(1)).thenReturn(versionNamePart);
         when(relativePath.subpath(0, 2)).thenReturn(relativePath);
-        determinator = new BundleDeterminator(context);
+        determinator = factory.createDeterminator(context);
         determinator.setPrefix(ANY_PREFIX);
     }
 
@@ -98,6 +97,41 @@ public class BundleDeterminatorTest {
 
         // Should have been called exactly once
         verify(context).getBundles();
+    }
+
+    @Test
+    public void determineBundleWithLatesVersionInRange() throws Exception {
+        versionNamePart = mock(Path.class, withSettings().name("[2.0.0,3.0.0)"));
+        when(relativePath.getName(1)).thenReturn(versionNamePart);
+
+        final Version v1 = valueOf("1.5.0");
+        final Version v2 = valueOf("2.4.0");
+        final Version v3 = valueOf("2.7.0");
+        final Version v4 = valueOf("2.9.0");
+        final Version v5 = valueOf("3.0.0");
+
+        final Bundle b1 = mock(Bundle.class);
+        final Bundle b2 = mock(Bundle.class);
+        final Bundle b3 = mock(Bundle.class);
+        final Bundle b4 = mock(Bundle.class);
+        final Bundle b5 = mock(Bundle.class);
+
+        when(b1.getSymbolicName()).thenReturn(ANY_SYMBOLIC_NAME);
+        when(b2.getSymbolicName()).thenReturn(ANY_SYMBOLIC_NAME);
+        when(b3.getSymbolicName()).thenReturn(ANY_SYMBOLIC_NAME);
+        when(b4.getSymbolicName()).thenReturn(ANY_SYMBOLIC_NAME);
+        when(b5.getSymbolicName()).thenReturn(ANY_SYMBOLIC_NAME);
+
+        when(b1.getVersion()).thenReturn(v1);
+        when(b2.getVersion()).thenReturn(v2);
+        when(b3.getVersion()).thenReturn(v3);
+        when(b4.getVersion()).thenReturn(v4);
+        when(b5.getVersion()).thenReturn(v5);
+
+        bundles = new Bundle[]{systemBundle, userBundle, b1, b2, b3, b4, b5};
+        when(context.getBundles()).thenReturn(bundles);
+
+        assertSame(b4, determinator.determine(relativePath));
     }
 
     @Test
