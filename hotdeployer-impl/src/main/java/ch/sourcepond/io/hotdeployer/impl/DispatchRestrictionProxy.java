@@ -10,66 +10,47 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl;
 
+import ch.sourcepond.io.fileobserver.api.PathMatcherBuilder;
 import ch.sourcepond.io.fileobserver.api.SimpleDispatchRestriction;
 
-import static ch.sourcepond.io.hotdeployer.impl.GlobPattern.BACKSLASH;
-import static java.lang.String.valueOf;
+import java.nio.file.PathMatcher;
 
 /**
  *
  */
 class DispatchRestrictionProxy implements SimpleDispatchRestriction {
-
-    @FunctionalInterface
-    private static interface Converter {
-
-        String convert(String pPattern);
-    }
-
-    private static final String VERSION_RANGE_PATTERN = "^(\\d+(\\.\\d+(\\.\\d+(\\.[\\d\\w-]+)?)?)?)$|^" +
+    static final String VERSION_RANGE_PATTERN = "^(\\d+(\\.\\d+(\\.\\d+(\\.[\\d\\w-]+)?)?)?)$|^" +
             "([\\[\\(]\\d+(\\.\\d+(\\.\\d+(\\.[\\d\\w-]+)?)?)?(,\\s*)?(\\d+(\\.\\d+(\\.\\d+(\\.[\\d\\w-]+)?)?)?)?" +
             "(\\]|\\)))$";
     private final SimpleDispatchRestriction delegate;
     private final String bundlePrefixPattern;
 
-    DispatchRestrictionProxy(final SimpleDispatchRestriction pDelegate,
-                             final String pPrefix) {
+    DispatchRestrictionProxy(final String pPrefix, final SimpleDispatchRestriction pDelegate) {
         delegate = pDelegate;
         bundlePrefixPattern = "^" + escape(pPrefix, "\\^$.|?*+()[{") + ".*";
     }
 
     private static String escape(final String pPrefix, final String pToBeEscaped) {
         String result = pPrefix;
+        final StringBuilder builder = new StringBuilder(pPrefix);
         for (final char toBeEscaped : pToBeEscaped.toCharArray()) {
-            final String replacementPattern = valueOf(BACKSLASH) + toBeEscaped;
-            result = result.replaceAll(replacementPattern, valueOf(toBeEscaped));
+            for (int i = 0 ; i < builder.length() ; i++) {
+                if (builder.charAt(i) == toBeEscaped) {
+                    builder.insert(i++, '\\');
+                }
+            }
         }
         return result;
     }
 
-    private String[] buildRegex(final Converter pConverter, final String... pPatterns) {
-        final String[] combined = new String[pPatterns.length + 2];
-        combined[0] = bundlePrefixPattern;
-        combined[1] = VERSION_RANGE_PATTERN;
-
-        for (int i = 0, z = 2; i < pPatterns.length; i++, z++) {
-            combined[z] = pConverter.convert(pPatterns[i]);
-        }
-
-        return combined;
+    @Override
+    public PathMatcherBuilder whenPathMatchesPattern(final String pSyntax, final String pPattern) {
+        delegate.whenPathMatchesRegex(bundlePrefixPattern).andRegex(VERSION_RANGE_PATTERN).andPattern(pSyntax, pPattern);
+        return delegate.whenPathMatchesPattern(pSyntax, pPattern);
     }
 
     @Override
-    public SimpleDispatchRestriction addGlob(final String... pPatterns) {
-        delegate.addGlob(pPatterns);
-        delegate.addRegex(buildRegex(GlobPattern::convert, pPatterns));
-        return this;
-    }
-
-    @Override
-    public SimpleDispatchRestriction addRegex(final String... pPatterns) {
-        delegate.addRegex(pPatterns);
-        delegate.addRegex(buildRegex(s -> s, pPatterns));
-        return this;
+    public PathMatcherBuilder whenPathMatches(final PathMatcher pMatcher) {
+        return delegate.whenPathMatches(pMatcher);
     }
 }

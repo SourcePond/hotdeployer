@@ -13,7 +13,7 @@ package ch.sourcepond.io.hotdeployer.impl;
 import ch.sourcepond.io.fileobserver.api.FileObserver;
 import ch.sourcepond.io.fileobserver.api.KeyDeliveryHook;
 import ch.sourcepond.io.fileobserver.spi.WatchedDirectory;
-import ch.sourcepond.io.hotdeployer.api.HotdeployObserver;
+import ch.sourcepond.io.hotdeployer.api.FileChangeObserver;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
@@ -30,7 +30,7 @@ public class ActivatorTest {
     private static final String ANY_PREFIX = "$BUNDLE$_";
     private final Path hotdeployDir = mock(Path.class);
     private final DirectoryFactory directoryFactory = mock(DirectoryFactory.class);
-    private final HotdeployObserver observer = mock(HotdeployObserver.class);
+    private final FileChangeObserver observer = mock(FileChangeObserver.class);
     private final WatchedDirectory watchedDirectory = mock(WatchedDirectory.class);
     private final ServiceRegistration<WatchedDirectory> watchedDirectoryRegistration = mock(ServiceRegistration.class);
     private final ServiceRegistration<KeyDeliveryHook> hookRegistration = mock(ServiceRegistration.class);
@@ -81,6 +81,6 @@ public class ActivatorTest {
     @Test
     public void removeObserverNothingRegistered() {
         // This should not cause an exception
-        activator.removeObserver(mock(HotdeployObserver.class));
+        activator.removeObserver(mock(FileChangeObserver.class));
     }
 }

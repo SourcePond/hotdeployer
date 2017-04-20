@@ -25,7 +25,7 @@ import java.nio.file.Path;
  * within a watched directory and its sub-directories.</p>
  * <p><em>Implementations of this interface must be thread-safe.</em></p>
  */
-public interface HotdeployObserver {
+public interface FileChangeObserver {
 
     default void setup(SimpleDispatchRestriction pRestriction) {
         // noop by default

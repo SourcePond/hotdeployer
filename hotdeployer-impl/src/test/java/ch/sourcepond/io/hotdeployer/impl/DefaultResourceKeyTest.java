@@ -44,29 +44,6 @@ public class DefaultResourceKeyTest {
         assertSame(firstBundle, firstKey.getDirectoryKey());
     }
 
-    @Test(expected = NullPointerException.class)
-    public void isSubKeyOtherIsNull() {
-        firstKey.isSubKeyOf(null);
-    }
-
-    @Test
-    public void isParentKey() {
-        assertFalse(secondKey.isParentKeyOf(firstKey));
-        secondKey = new DefaultResourceKey(secondFileKey, firstBundle, secondPath);
-        assertFalse(secondKey.isParentKeyOf(firstKey));
-        when(secondPath.startsWith(firstPath)).thenReturn(true);
-        assertTrue(firstKey.isParentKeyOf(secondKey));
-    }
-
-    @Test
-    public void isSubKey() {
-        assertFalse(secondKey.isSubKeyOf(firstKey));
-        secondKey = new DefaultResourceKey(secondFileKey, firstBundle, secondPath);
-        assertFalse(secondKey.isSubKeyOf(firstKey));
-        when(firstPath.startsWith(secondPath)).thenReturn(true);
-        assertTrue(firstKey.isSubKeyOf(secondKey));
-    }
-
     @Test
     public void verifyEquals() {
         assertTrue(firstKey.equals(firstKey));
@@ -77,13 +54,13 @@ public class DefaultResourceKeyTest {
         assertFalse(firstKey.equals(secondKey));
         secondKey = new DefaultResourceKey(secondFileKey, firstBundle, secondPath);
         assertFalse(firstKey.equals(secondKey));
-        secondKey = new DefaultResourceKey(secondFileKey, firstBundle, firstPath);
+        secondKey = new DefaultResourceKey(firstFileKey, firstBundle, firstPath);
         assertTrue(firstKey.equals(secondKey));
     }
 
     @Test
     public void verifyHash() {
-        assertEquals(hash(firstBundle, firstPath), firstKey.hashCode());
+        assertEquals(hash(firstBundle, firstFileKey), firstKey.hashCode());
     }
 
     @Test

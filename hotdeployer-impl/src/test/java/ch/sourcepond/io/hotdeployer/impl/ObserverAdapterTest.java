@@ -11,7 +11,7 @@ limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl;
 
 import ch.sourcepond.io.fileobserver.api.FileKey;
-import ch.sourcepond.io.hotdeployer.api.HotdeployObserver;
+import ch.sourcepond.io.hotdeployer.api.FileChangeObserver;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
@@ -28,9 +28,9 @@ public class ObserverAdapterTest {
     private final FileKey<Object> fileKey = mock(FileKey.class);
     private final FileKey<Bundle> resourceKey = mock(FileKey.class);
     private final KeyProvider provider = mock(KeyProvider.class);
-    private final HotdeployObserver hotdeployObserver = mock(HotdeployObserver.class);
+    private final FileChangeObserver fileChangeObserver = mock(FileChangeObserver.class);
     private final Path file = mock(Path.class);
-    private final ObserverAdapter adapter = new ObserverAdapter(ANY_PREFIX, provider, hotdeployObserver);
+    private final ObserverAdapter adapter = new ObserverAdapter(ANY_PREFIX, provider, fileChangeObserver);
 
     @Before
     public void setup() throws Exception {
@@ -40,13 +40,13 @@ public class ObserverAdapterTest {
     @Test
     public void supplement() {
         adapter.supplement(null, null);
-        verifyZeroInteractions(fileKey, resourceKey, provider, hotdeployObserver);
+        verifyZeroInteractions(fileKey, resourceKey, provider, fileChangeObserver);
     }
 
     @Test
     public void modified() throws Exception {
         adapter.modified(fileKey, file);
-        verify(hotdeployObserver).modified(resourceKey, file);
+        verify(fileChangeObserver).modified(resourceKey, file);
     }
 
     @Test
@@ -61,7 +61,7 @@ public class ObserverAdapterTest {
     @Test
     public void discard() {
         adapter.discard(fileKey);
-        verify(hotdeployObserver).discard(resourceKey);
+        verify(fileChangeObserver).discard(resourceKey);
     }
 
 

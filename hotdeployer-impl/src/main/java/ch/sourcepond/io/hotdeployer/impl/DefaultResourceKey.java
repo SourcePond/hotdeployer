@@ -14,7 +14,6 @@ import ch.sourcepond.io.fileobserver.api.FileKey;
 import org.osgi.framework.Bundle;
 
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Objects;
 
 import static java.lang.String.format;
@@ -47,26 +46,6 @@ final class DefaultResourceKey implements FileKey<Bundle> {
     }
 
     @Override
-    public boolean isParentKeyOf(final FileKey pOther) {
-        return fileKey.isParentKeyOf(pOther);
-    }
-
-    @Override
-    public boolean isSubKeyOf(final FileKey pOther) {
-        return fileKey.isSubKeyOf(pOther);
-    }
-
-    @Override
-    public Collection<FileKey<Bundle>> findSubKeys(final Collection<FileKey<?>> pKeys) {
-        return fileKey.findSubKeys(pKeys);
-    }
-
-    @Override
-    public void removeSubKeys(final Collection<FileKey<?>> pKeys) {
-        fileKey.removeSubKeys(pKeys);
-    }
-
-    @Override
     public boolean equals(final Object o) {
         if (this == o) {
             return true;
@@ -75,13 +54,13 @@ final class DefaultResourceKey implements FileKey<Bundle> {
             return false;
         }
         final DefaultResourceKey that = (DefaultResourceKey) o;
-        return Objects.equals(fileKey, that.fileKey) &&
-                Objects.equals(source, that.source);
+        return Objects.equals(source, that.source) &&
+                Objects.equals(fileKey, that.fileKey);
     }
 
     @Override
     public int hashCode() {
-        return hash(fileKey, source);
+        return hash(source, fileKey);
     }
 
     @Override

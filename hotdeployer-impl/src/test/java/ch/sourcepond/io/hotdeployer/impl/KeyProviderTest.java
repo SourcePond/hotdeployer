@@ -27,6 +27,7 @@ import static org.osgi.framework.Constants.SYSTEM_BUNDLE_ID;
  *
  */
 public class KeyProviderTest {
+    private static final int RELATIVE_PATH_NAME_COUNT = 5;
     private final Path relativePath = mock(Path.class);
     private final Path adjustedRelativePath = mock(Path.class);
     private final Bundle bundle = mock(Bundle.class);
@@ -39,7 +40,8 @@ public class KeyProviderTest {
         when(fileKey.getRelativePath()).thenReturn(relativePath);
         when(determinator.determine(relativePath)).thenReturn(bundle);
         when(bundle.getBundleId()).thenReturn(10l);
-        when(relativePath.getName(SPECIAL_BUNDLE_NAME_COUNT)).thenReturn(adjustedRelativePath);
+        when(relativePath.getNameCount()).thenReturn(RELATIVE_PATH_NAME_COUNT);
+        when(relativePath.subpath(SPECIAL_BUNDLE_NAME_COUNT, RELATIVE_PATH_NAME_COUNT)).thenReturn(adjustedRelativePath);
     }
 
     @Test

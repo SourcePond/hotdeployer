@@ -13,7 +13,7 @@ package ch.sourcepond.io.hotdeployer.impl;
 import ch.sourcepond.io.fileobserver.api.FileObserver;
 import ch.sourcepond.io.fileobserver.api.KeyDeliveryHook;
 import ch.sourcepond.io.fileobserver.spi.WatchedDirectory;
-import ch.sourcepond.io.hotdeployer.api.HotdeployObserver;
+import ch.sourcepond.io.hotdeployer.api.FileChangeObserver;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.*;
@@ -45,7 +45,7 @@ public class Activator {
     private WatchedDirectory watchedDirectory;
     private ServiceRegistration<KeyDeliveryHook> hookRegistration;
     private ServiceRegistration<WatchedDirectory> watchedDirectoryRegistration;
-    private ConcurrentMap<HotdeployObserver, ServiceRegistration<FileObserver>> observers = new ConcurrentHashMap<>();
+    private ConcurrentMap<FileChangeObserver, ServiceRegistration<FileObserver>> observers = new ConcurrentHashMap<>();
     private BundleContext context;
 
     // Constructor for OSGi DS
@@ -79,7 +79,7 @@ public class Activator {
         config = pConfig;
 
         if (!pConfig.bundleResourceDirectoryPrefix().equals(previousConfig.bundleResourceDirectoryPrefix())) {
-            final Collection<HotdeployObserver> toBeRegistered = new ArrayList<>(observers.keySet());
+            final Collection<FileChangeObserver> toBeRegistered = new ArrayList<>(observers.keySet());
             unregisterAllObservers();
             toBeRegistered.forEach(this::addObserver);
         }
@@ -100,14 +100,14 @@ public class Activator {
     }
 
     @Reference(policy = DYNAMIC, cardinality = MULTIPLE)
-    public void addObserver(final HotdeployObserver pObserver) {
+    public void addObserver(final FileChangeObserver pObserver) {
         observers.put(pObserver, context.registerService(
                 FileObserver.class,
                 new ObserverAdapter(config.bundleResourceDirectoryPrefix(), keyProvider, pObserver),
                 null));
     }
 
-    public void removeObserver(final HotdeployObserver pObserver) {
+    public void removeObserver(final FileChangeObserver pObserver) {
         final ServiceRegistration<FileObserver> adapterRegistration = observers.remove(pObserver);
         if (adapterRegistration == null) {
             LOG.warn("No adapter was registered for hotdeployer-observer {}", pObserver);

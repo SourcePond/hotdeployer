@@ -11,7 +11,7 @@ limitations under the License.*/
 package ch.sourcepond.io.hotdeployer;
 
 import ch.sourcepond.io.fileobserver.api.FileKey;
-import ch.sourcepond.io.hotdeployer.api.HotdeployObserver;
+import ch.sourcepond.io.hotdeployer.api.FileChangeObserver;
 import ch.sourcepond.testing.BundleContextClassLoaderRule;
 import org.junit.After;
 import org.junit.Before;
@@ -70,8 +70,8 @@ public class HotdeployerTest {
     @Inject
     private BundleContext context;
     private Bundle systemBundle;
-    private final HotdeployObserver observer = mock(HotdeployObserver.class);
-    private ServiceRegistration<HotdeployObserver> hotdeployObserverRegistration;
+    private final FileChangeObserver observer = mock(FileChangeObserver.class);
+    private ServiceRegistration<FileChangeObserver> hotdeployObserverRegistration;
     private Path testFile;
 
     @Configuration
@@ -102,7 +102,7 @@ public class HotdeployerTest {
     public void setup() throws Exception {
         createDirectories(TEST_DIR);
         systemBundle = context.getBundle(SYSTEM_BUNDLE_ID);
-        hotdeployObserverRegistration = context.registerService(HotdeployObserver.class, observer, null);
+        hotdeployObserverRegistration = context.registerService(FileChangeObserver.class, observer, null);
     }
 
     @After

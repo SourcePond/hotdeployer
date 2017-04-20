@@ -21,7 +21,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ch.sourcepond.io</groupId>
     <artifactId>hotdeployer</artifactId>
-    <version>2.1-SNAPSHOT</version>
+    <version>3.0-SNAPSHOT</version>
     <inceptionYear>2017</inceptionYear>
     <packaging>pom</packaging>
 
@@ -38,8 +38,8 @@
 
 
     <properties>
-        <fileobserver.version>[5.0.0,6.0.0)</fileobserver.version>
-        <smartswitch.version>[4.0.0,5.0.0)</smartswitch.version>
+        <fileobserver.version>6.0.1</fileobserver.version>
+        <smartswitch.version>4.0.1</smartswitch.version>
         <repo.project>${project.artifactId}</repo.project>
     </properties>
 

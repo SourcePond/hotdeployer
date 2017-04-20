@@ -13,7 +13,7 @@ package ch.sourcepond.io.hotdeployer.impl;
 import ch.sourcepond.io.fileobserver.api.DispatchRestriction;
 import ch.sourcepond.io.fileobserver.api.FileKey;
 import ch.sourcepond.io.fileobserver.api.FileObserver;
-import ch.sourcepond.io.hotdeployer.api.HotdeployObserver;
+import ch.sourcepond.io.hotdeployer.api.FileChangeObserver;
 import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 
@@ -31,20 +31,20 @@ class ObserverAdapter implements FileObserver {
     private static final Logger LOG = getLogger(ObserverAdapter.class);
     private final String prefix;
     private final KeyProvider keyProvider;
-    private final HotdeployObserver hotdeployObserver;
+    private final FileChangeObserver fileChangeObserver;
 
     ObserverAdapter(final String pPrefix,
                 final KeyProvider pKeyProvider,
-                    final HotdeployObserver pHotdeployObserver) {
+                    final FileChangeObserver pFileChangeObserver) {
         prefix = pPrefix;
         keyProvider = pKeyProvider;
-        hotdeployObserver = pHotdeployObserver;
+        fileChangeObserver = pFileChangeObserver;
     }
 
     @Override
     public void setup(final DispatchRestriction pSetup) {
         pSetup.accept(DIRECTORY_KEY);
-        hotdeployObserver.setup(new DispatchRestrictionProxy(pSetup, prefix));
+        fileChangeObserver.setup(new DispatchRestrictionProxy(prefix, pSetup));
     }
 
     @Override
@@ -57,7 +57,7 @@ class ObserverAdapter implements FileObserver {
     public void modified(final FileKey<?> fileKey, final Path path) throws IOException {
         try {
             final FileKey<Bundle> key = keyProvider.getKey(fileKey);
-            hotdeployObserver.modified(key, path);
+            fileChangeObserver.modified(key, path);
             LOG.debug("Modified: resource-key : {} , absolute path {}", key, path);
         } catch (final ResourceKeyException e) {
             LOG.warn("Observer was not informed about modification because a problem was reported!", e);
@@ -68,7 +68,7 @@ class ObserverAdapter implements FileObserver {
     public void discard(final FileKey fileKey) {
         try {
             final FileKey<Bundle> key = keyProvider.getKey(fileKey);
-            hotdeployObserver.discard(key);
+            fileChangeObserver.discard(key);
             LOG.debug("Discard: resource-key : {}", key);
         } catch (final ResourceKeyException e) {
             LOG.warn("Observer was not informed about discard because a problem was reported!", e);
