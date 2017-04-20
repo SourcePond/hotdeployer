@@ -21,6 +21,7 @@ import ch.sourcepond.io.hotdeployer.impl.key.KeyProviderFactory;
 import ch.sourcepond.io.hotdeployer.impl.observer.ObserverAdapterFactory;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InOrder;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
@@ -86,13 +87,22 @@ public class ActivatorTest {
         activator.modify(config);
         verify(watchedDirectory).relocate(hotdeployDir);
         verifyZeroInteractions(observerAdapterRegistration);
-        verifyNoMoreInteractions(bundleDeterminator);
+        verifyNoMoreInteractions(bundleDeterminator, watchedDirectory);
     }
 
     @Test
     public void modifyPrefixChanged() throws Exception {
-        when(config.bundleResourceDirectoryPrefix()).thenReturn(DIFFERENT_PREFIX);
-        activator.modify(config);
+        final Config newConfig = mock(Config.class);
+        when(newConfig.bundleResourceDirectoryPrefix()).thenReturn(DIFFERENT_PREFIX);
+        when(directoryFactory.newWatchedDirectory(newConfig)).thenReturn(watchedDirectory);
+        when(directoryFactory.getHotdeployDir(newConfig)).thenReturn(hotdeployDir);
+        when(adapterFactory.createAdapter(DIFFERENT_PREFIX, keyProvider, observer)).thenReturn(adapter);
+
+        activator.modify(newConfig);
+        final InOrder order = inOrder(bundleDeterminator, observerAdapterRegistration, watchedDirectory);
+        order.verify(bundleDeterminator).setPrefix(DIFFERENT_PREFIX);
+        order.verify(observerAdapterRegistration).unregister();
+        order.verify(watchedDirectory).relocate(hotdeployDir);
     }
 
     @Test
