@@ -18,6 +18,7 @@ import ch.sourcepond.io.hotdeployer.impl.determinator.BundleDeterminator;
 import ch.sourcepond.io.hotdeployer.impl.determinator.BundleDeterminatorFactory;
 import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
 import ch.sourcepond.io.hotdeployer.impl.key.KeyProviderFactory;
+import ch.sourcepond.io.hotdeployer.impl.observer.ObserverAdapterFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
@@ -34,6 +35,8 @@ public class ActivatorTest {
     private static final String ANY_PREFIX = "$BUNDLE$_";
     private static final String DIFFERENT_PREFIX = "$DIFFERENT$_";
     private final Path hotdeployDir = mock(Path.class);
+    private final ObserverAdapterFactory adapterFactory = mock(ObserverAdapterFactory.class);
+    private final FileObserver adapter = mock(FileObserver.class);
     private final KeyProviderFactory keyProviderFactory = mock(KeyProviderFactory.class);
     private final KeyProvider keyProvider = mock(KeyProvider.class);
     private final BundleDeterminatorFactory bundleDeterminatorFactory = mock(BundleDeterminatorFactory.class);
@@ -46,18 +49,19 @@ public class ActivatorTest {
     private final ServiceRegistration<FileObserver> observerAdapterRegistration = mock(ServiceRegistration.class);
     private final BundleContext context = mock(BundleContext.class);
     private final Config config = mock(Config.class);
-    private final Activator activator = new Activator(bundleDeterminatorFactory, directoryFactory, keyProviderFactory);
+    private final Activator activator = new Activator(adapterFactory, bundleDeterminatorFactory, directoryFactory, keyProviderFactory);
 
     @Before
     public void setup() throws Exception {
+        when(adapterFactory.createAdapter(ANY_PREFIX, keyProvider, observer)).thenReturn(adapter);
         when(keyProviderFactory.createProvider(bundleDeterminator)).thenReturn(keyProvider);
         when(bundleDeterminatorFactory.createDeterminator(context)).thenReturn(bundleDeterminator);
         when(directoryFactory.getHotdeployDir(config)).thenReturn(hotdeployDir);
         when(config.bundleResourceDirectoryPrefix()).thenReturn(ANY_PREFIX);
         when(directoryFactory.newWatchedDirectory(config)).thenReturn(watchedDirectory);
         when(context.registerService(WatchedDirectory.class, watchedDirectory, null)).thenReturn(watchedDirectoryRegistration);
-        when(context.registerService(same(FileObserver.class), argThat((FileObserver t) -> t instanceof ObserverAdapter), isNull())).thenReturn(observerAdapterRegistration);
-        when(context.registerService(same(KeyDeliveryHook.class), argThat((KeyDeliveryHook h) -> h instanceof KeyProvider), isNull())).thenReturn(hookRegistration);
+        when(context.registerService(FileObserver.class, adapter, null)).thenReturn(observerAdapterRegistration);
+        when(context.registerService(KeyDeliveryHook.class, keyProvider, null)).thenReturn(hookRegistration);
 
         activator.activate(context, config);
         activator.addObserver(observer);

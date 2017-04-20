@@ -18,6 +18,7 @@ import ch.sourcepond.io.hotdeployer.impl.determinator.BundleDeterminator;
 import ch.sourcepond.io.hotdeployer.impl.determinator.BundleDeterminatorFactory;
 import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
 import ch.sourcepond.io.hotdeployer.impl.key.KeyProviderFactory;
+import ch.sourcepond.io.hotdeployer.impl.observer.ObserverAdapterFactory;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.*;
@@ -42,6 +43,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 @Designate(ocd = Config.class)
 public class Activator {
     private static final Logger LOG = getLogger(Activator.class);
+    private final ObserverAdapterFactory adapterFactory;
     private final DirectoryFactory directoryFactory;
     private final BundleDeterminatorFactory bundleDeterminatorFactory;
     private final KeyProviderFactory keyProviderFactory;
@@ -56,15 +58,18 @@ public class Activator {
 
     // Constructor for OSGi DS
     public Activator() {
-        this(new BundleDeterminatorFactory(),
+        this(new ObserverAdapterFactory(),
+                new BundleDeterminatorFactory(),
                 new DirectoryFactory(),
                 new KeyProviderFactory());
     }
 
     // Constructor for testing
-    Activator(final BundleDeterminatorFactory pBundleDeterminatorFactory,
+    Activator(final ObserverAdapterFactory pAdapterFactory,
+              final BundleDeterminatorFactory pBundleDeterminatorFactory,
               final DirectoryFactory pDirectoryFactory,
               final KeyProviderFactory pKeyProviderFactory) {
+        adapterFactory = pAdapterFactory;
         bundleDeterminatorFactory = pBundleDeterminatorFactory;
         directoryFactory = pDirectoryFactory;
         keyProviderFactory = pKeyProviderFactory;
@@ -123,7 +128,7 @@ public class Activator {
     public void addObserver(final FileChangeObserver pObserver) {
         observers.put(pObserver, context.registerService(
                 FileObserver.class,
-                new ObserverAdapter(config.bundleResourceDirectoryPrefix(), keyProvider, pObserver),
+                adapterFactory.createAdapter (config.bundleResourceDirectoryPrefix(), keyProvider, pObserver),
                 null));
     }
 

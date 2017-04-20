@@ -8,23 +8,20 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.*/
-package ch.sourcepond.io.hotdeployer.impl;
+package ch.sourcepond.io.hotdeployer.impl.observer;
 
-import ch.sourcepond.io.fileobserver.api.SimpleDispatchRestriction;
-import org.junit.Test;
-
-import static org.mockito.Mockito.mock;
+import ch.sourcepond.io.fileobserver.api.FileObserver;
+import ch.sourcepond.io.hotdeployer.api.FileChangeObserver;
+import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
 
 /**
  *
  */
-public class DispatchRestrictionProxyTest {
-    private static final String ANY_PREFIX = "anyPrefix";
-    private final SimpleDispatchRestriction restriction = mock(SimpleDispatchRestriction.class);
-    private final DispatchRestrictionProxy proxy = new DispatchRestrictionProxy(ANY_PREFIX, restriction);
+public class ObserverAdapterFactory {
 
-    @Test
-    public void addGlob() {
-
+    public FileObserver createAdapter(final String pPrefix,
+                                      final KeyProvider pKeyProvider,
+                                      final FileChangeObserver pFileChangeObserver) {
+        return new ObserverAdapter(pPrefix, pKeyProvider, pFileChangeObserver);
     }
 }

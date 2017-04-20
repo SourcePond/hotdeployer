@@ -26,9 +26,9 @@ import static java.nio.file.Paths.get;
 /**
  *
  */
-class DirectoryFactory {
+public class DirectoryFactory {
+    public static final String DIRECTORY_KEY = "hotdeploymentDirectory";
     static final Path DEFAULT_HOTDEPLOY_DIRECTORY = getDefault().getPath(getProperty("java.io.tmpdir"), "sourcepond", "hotdeploy");
-    static final String DIRECTORY_KEY = "hotdeploymentDirectory";
 
     Path getHotdeployDir(final Config pConfig) throws IOException, URISyntaxException {
         final Path hotdeployDir;
