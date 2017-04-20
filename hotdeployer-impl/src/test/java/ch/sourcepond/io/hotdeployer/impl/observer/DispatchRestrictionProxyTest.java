@@ -11,9 +11,13 @@ limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl.observer;
 
 import ch.sourcepond.io.fileobserver.api.SimpleDispatchRestriction;
-import ch.sourcepond.io.hotdeployer.impl.observer.DispatchRestrictionProxy;
 import org.junit.Test;
 
+import java.util.regex.Pattern;
+
+import static ch.sourcepond.io.hotdeployer.impl.observer.DispatchRestrictionProxy.VERSION_RANGE_PATTERN;
+import static java.util.regex.Pattern.compile;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -25,7 +29,43 @@ public class DispatchRestrictionProxyTest {
     private final DispatchRestrictionProxy proxy = new DispatchRestrictionProxy(ANY_PREFIX, restriction);
 
     @Test
-    public void addGlob() {
+    public void verifyVersionRangePattern() {
+        final Pattern pattern = compile(VERSION_RANGE_PATTERN);
+        assertTrue(pattern.matcher("1.0.0").matches());
+        assertTrue(pattern.matcher("[1.0.0,]").matches());
+        assertTrue(pattern.matcher("[1.0.0,2.0.0]").matches());
+        assertTrue(pattern.matcher("[1.0.0, 2.0.0]").matches());
+        assertTrue(pattern.matcher("[1.0.0,)").matches());
+        assertTrue(pattern.matcher("[1.0.0,2.0.0)").matches());
+        assertTrue(pattern.matcher("[1.0.0, 2.0.0)").matches());
+        assertTrue(pattern.matcher("(1.0.0,)").matches());
+        assertTrue(pattern.matcher("(1.0.0,2.0.0)").matches());
+        assertTrue(pattern.matcher("(1.0.0, 2.0.0)").matches());
+        assertTrue(pattern.matcher("(1.0.0,]").matches());
+        assertTrue(pattern.matcher("(1.0.0,2.0.0]").matches());
+        assertTrue(pattern.matcher("(1.0.0, 2.0.0]").matches());
 
+        assertTrue(pattern.matcher("1.0.0.v2017_10-10CND").matches());
+        assertTrue(pattern.matcher("[1.0.0.v2017_10-10CND,]").matches());
+        assertTrue(pattern.matcher("[1.0.0.v2017_10-10CND,2.0.0.v2017_10-10CND]").matches());
+        assertTrue(pattern.matcher("[1.0.0.v2017_10-10CND, 2.0.0.v2017_10-10CND]").matches());
+        assertTrue(pattern.matcher("[1.0.0.v2017_10-10CND,)").matches());
+        assertTrue(pattern.matcher("[1.0.0.v2017_10-10CND,2.0.0.v2017_10-10CND)").matches());
+        assertTrue(pattern.matcher("[1.0.0.v2017_10-10CND, 2.0.0.v2017_10-10CND)").matches());
+        assertTrue(pattern.matcher("(1.0.0.v2017_10-10CND,)").matches());
+        assertTrue(pattern.matcher("(1.0.0.v2017_10-10CND,2.0.0.v2017_10-10CND)").matches());
+        assertTrue(pattern.matcher("(1.0.0.v2017_10-10CND, 2.0.0.v2017_10-10CND)").matches());
+        assertTrue(pattern.matcher("(1.0.0.v2017_10-10CND,]").matches());
+        assertTrue(pattern.matcher("(1.0.0.v2017_10-10CND,2.0.0.v2017_10-10CND]").matches());
+        assertTrue(pattern.matcher("(1.0.0.v2017_10-10CND, 2.0.0.v2017_10-10CND]").matches());
+
+        assertFalse(pattern.matcher("V1.0.0").matches());
+        assertFalse(pattern.matcher("[V1.0.0,]").matches());
+        assertFalse(pattern.matcher("[V1.0.0,2.0.0]").matches());
+        assertFalse(pattern.matcher("[1.0.0, V2.0.0]").matches());
+        assertFalse(pattern.matcher("[1.0.0,").matches());
+        assertFalse(pattern.matcher("1.0.0,2.0.0)").matches());
+        assertFalse(pattern.matcher("1.0.0,2.0.0").matches());
+        assertFalse(pattern.matcher("1.0.0, 2.0.0").matches());
     }
 }

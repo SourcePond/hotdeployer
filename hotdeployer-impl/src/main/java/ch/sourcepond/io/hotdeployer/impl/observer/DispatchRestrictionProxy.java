@@ -19,6 +19,9 @@ import java.nio.file.PathMatcher;
  *
  */
 class DispatchRestrictionProxy implements SimpleDispatchRestriction {
+    /*
+     * ^(\d+(\.\d+(\.\d+(\.[\d\w-]+)?)?)?)$|^([\[\(]\d+(\.\d+(\.\d+(\.[\d\w-]+)?)?)?(,\s*)?(\d+(\.\d+(\.\d+(\.[\d\w-]+)?)?)?)?(\]|\)))$
+     */
     static final String VERSION_RANGE_PATTERN = "^(\\d+(\\.\\d+(\\.\\d+(\\.[\\d\\w-]+)?)?)?)$|^" +
             "([\\[\\(]\\d+(\\.\\d+(\\.\\d+(\\.[\\d\\w-]+)?)?)?(,\\s*)?(\\d+(\\.\\d+(\\.\\d+(\\.[\\d\\w-]+)?)?)?)?" +
             "(\\]|\\)))$";
