@@ -10,30 +10,36 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl.observer;
 
-import ch.sourcepond.io.fileobserver.api.FileObserver;
-import ch.sourcepond.io.hotdeployer.api.FileChangeObserver;
+import ch.sourcepond.io.fileobserver.api.PathChangeListener;
+import ch.sourcepond.io.hotdeployer.api.FileChangeListener;
+import ch.sourcepond.io.hotdeployer.impl.Config;
 import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
+
+import java.nio.file.FileSystem;
 
 /**
  *
  */
 public class ObserverAdapterFactory {
-    private final DispatchRestrictionProxyFactory proxyFactory;
+    private final BundlePathDeterminator proxyFactory;
 
     // Constructor for activator
     public ObserverAdapterFactory() {
-        this(new DispatchRestrictionProxyFactory());
+        this(new BundlePathDeterminator());
     }
 
 
     // Constructor for testing
-    ObserverAdapterFactory(final DispatchRestrictionProxyFactory pProxyFactory) {
+    ObserverAdapterFactory(final BundlePathDeterminator pProxyFactory) {
         proxyFactory = pProxyFactory;
     }
 
-    public FileObserver createAdapter(final String pPrefix,
-                                      final KeyProvider pKeyProvider,
-                                      final FileChangeObserver pFileChangeObserver) {
-        return new ObserverAdapter(pPrefix, proxyFactory, pKeyProvider, pFileChangeObserver);
+    public void setConfig(final FileSystem pFileSystem, final Config pConfig) {
+        proxyFactory.setConfig(pFileSystem, pConfig.bundleResourceDirectoryPrefix());
+    }
+
+    public PathChangeListener createAdapter(final KeyProvider pKeyProvider,
+                                            final FileChangeListener pFileChangeListener) {
+        return new ObserverAdapter(proxyFactory, pKeyProvider, pFileChangeListener);
     }
 }

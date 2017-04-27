@@ -10,16 +10,17 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl.observer;
 
+import ch.sourcepond.io.fileobserver.api.DispatchKey;
 import ch.sourcepond.io.fileobserver.api.DispatchRestriction;
-import ch.sourcepond.io.fileobserver.api.FileKey;
-import ch.sourcepond.io.fileobserver.api.FileObserver;
-import ch.sourcepond.io.hotdeployer.api.FileChangeObserver;
+import ch.sourcepond.io.fileobserver.api.PathChangeEvent;
+import ch.sourcepond.io.fileobserver.api.PathChangeListener;
+import ch.sourcepond.io.hotdeployer.api.FileChangeListener;
 import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
 import ch.sourcepond.io.hotdeployer.impl.key.ResourceKeyException;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.framework.Bundle;
 
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 
 import static ch.sourcepond.io.hotdeployer.impl.DirectoryFactory.DIRECTORY_KEY;
@@ -30,40 +31,42 @@ import static org.mockito.Mockito.*;
  */
 public class ObserverAdapterTest {
     private static final String ANY_PREFIX = "anyPrefix";
-    private final FileKey<Object> fileKey = mock(FileKey.class);
-    private final FileKey<Bundle> resourceKey = mock(FileKey.class);
+    private final DispatchKey fileKey = mock(DispatchKey.class);
+    private final PathChangeEvent event = mock(PathChangeEvent.class);
+    private final DispatchKey resourceKey = mock(DispatchKey.class);
     private final KeyProvider provider = mock(KeyProvider.class);
-    private final FileChangeObserver fileChangeObserver = mock(FileChangeObserver.class);
+    private final FileChangeListener fileChangeListener = mock(FileChangeListener.class);
+    private final FileSystem fs = mock(FileSystem.class);
     private final Path file = mock(Path.class);
-    private final DispatchRestrictionProxyFactory proxyFactory = mock(DispatchRestrictionProxyFactory.class);
+    private final BundlePathDeterminator proxyFactory = mock(BundlePathDeterminator.class);
     private final DispatchRestrictionProxy proxy = mock(DispatchRestrictionProxy.class);
-    private final DispatchRestriction setup = mock(DispatchRestriction.class);
+    private final DispatchRestriction restriction = mock(DispatchRestriction.class);
     private final ObserverAdapterFactory factory = new ObserverAdapterFactory(proxyFactory);
-    private final FileObserver adapter = factory.createAdapter(ANY_PREFIX, provider, fileChangeObserver);
+    private final PathChangeListener adapter = factory.createAdapter(provider, fileChangeListener);
 
     @Before
     public void setup() throws Exception {
         when(provider.getKey(fileKey)).thenReturn(resourceKey);
-        when(proxyFactory.createProxy(ANY_PREFIX, setup)).thenReturn(proxy);
+        when(proxyFactory.createProxy( restriction)).thenReturn(proxy);
     }
 
     @Test
-    public void verifySetup() {
-        adapter.setup(setup);
-        verify(setup).accept(DIRECTORY_KEY);
-        verify(fileChangeObserver).setup(proxy);
+    public void restrict() {
+        adapter.restrict(restriction, fs);
+        verify(restriction).accept(DIRECTORY_KEY);
+        verify(fileChangeListener).setup(proxy);
     }
 
     @Test
     public void supplement() {
         adapter.supplement(null, null);
-        verifyZeroInteractions(fileKey, resourceKey, provider, fileChangeObserver);
+        verifyZeroInteractions(fileKey, resourceKey, provider, fileChangeListener);
     }
 
     @Test
     public void modified() throws Exception {
-        adapter.modified(fileKey, file);
-        verify(fileChangeObserver).modified(resourceKey, file);
+        adapter.modified(event);
+        verify(fileChangeListener).modified(event);
     }
 
     @Test
@@ -72,13 +75,13 @@ public class ObserverAdapterTest {
         doThrow(expected).when(provider).getKey(fileKey);
 
         // Should not cause an exception to be thrown
-        adapter.modified(fileKey, file);
+        adapter.modified(event);
     }
 
     @Test
     public void discard() {
         adapter.discard(fileKey);
-        verify(fileChangeObserver).discard(resourceKey);
+        verify(fileChangeListener).discard(resourceKey);
     }
 
 

@@ -10,17 +10,17 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl.observer;
 
+import ch.sourcepond.io.fileobserver.api.DispatchKey;
 import ch.sourcepond.io.fileobserver.api.DispatchRestriction;
-import ch.sourcepond.io.fileobserver.api.FileKey;
-import ch.sourcepond.io.fileobserver.api.FileObserver;
-import ch.sourcepond.io.hotdeployer.api.FileChangeObserver;
+import ch.sourcepond.io.fileobserver.api.PathChangeEvent;
+import ch.sourcepond.io.fileobserver.api.PathChangeListener;
+import ch.sourcepond.io.hotdeployer.api.FileChangeListener;
 import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
 import ch.sourcepond.io.hotdeployer.impl.key.ResourceKeyException;
-import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 
 import java.io.IOException;
-import java.nio.file.Path;
+import java.nio.file.FileSystem;
 
 import static ch.sourcepond.io.hotdeployer.impl.DirectoryFactory.DIRECTORY_KEY;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -28,52 +28,48 @@ import static org.slf4j.LoggerFactory.getLogger;
 /**
  *
  */
-class ObserverAdapter implements FileObserver {
-
+class ObserverAdapter implements PathChangeListener {
     private static final Logger LOG = getLogger(ObserverAdapter.class);
-    private final String prefix;
-    private final DispatchRestrictionProxyFactory proxyFactory;
+    private final BundlePathDeterminator proxyFactory;
     private final KeyProvider keyProvider;
-    private final FileChangeObserver fileChangeObserver;
+    private final FileChangeListener fileChangeListener;
 
-    ObserverAdapter(final String pPrefix,
-                    final DispatchRestrictionProxyFactory pProxyFactory,
+    ObserverAdapter(final BundlePathDeterminator pProxyFactory,
                     final KeyProvider pKeyProvider,
-                    final FileChangeObserver pFileChangeObserver) {
-        prefix = pPrefix;
+                    final FileChangeListener pFileChangeListener) {
         proxyFactory = pProxyFactory;
         keyProvider = pKeyProvider;
-        fileChangeObserver = pFileChangeObserver;
+        fileChangeListener = pFileChangeListener;
     }
 
     @Override
-    public void setup(final DispatchRestriction pSetup) {
-        pSetup.accept(DIRECTORY_KEY);
-        fileChangeObserver.setup(proxyFactory.createProxy(prefix, pSetup));
+    public void restrict(final DispatchRestriction pRestriction, final FileSystem pFileSystem) {
+        pRestriction.accept(DIRECTORY_KEY);
+        fileChangeListener.setup(proxyFactory.createProxy(pRestriction));
     }
 
     @Override
-    public void supplement(final FileKey<?> pKnownKey, final FileKey<?> pAdditionalKey) {
+    public void supplement(final DispatchKey pKnownKey, final DispatchKey pAdditionalKey) {
         // noop because we are watching exactly one directory key. In this case
         // this method will never be called.
     }
 
     @Override
-    public void modified(final FileKey<?> fileKey, final Path path) throws IOException {
+    public void modified(final PathChangeEvent pEvent) throws IOException {
         try {
-            final FileKey<Bundle> key = keyProvider.getKey(fileKey);
-            fileChangeObserver.modified(key, path);
-            LOG.debug("Modified: resource-key : {} , absolute path {}", key, path);
+            final DispatchKey key = keyProvider.getKey(pEvent.getKey());
+            fileChangeListener.modified(new DispatchEventProxy(pEvent, key));
+            LOG.debug("Modified: {}", pEvent);
         } catch (final ResourceKeyException e) {
             LOG.warn("Observer was not informed about modification because a problem was reported!", e);
         }
     }
 
     @Override
-    public void discard(final FileKey fileKey) {
+    public void discard(final DispatchKey pKey) {
         try {
-            final FileKey<Bundle> key = keyProvider.getKey(fileKey);
-            fileChangeObserver.discard(key);
+            final DispatchKey key = keyProvider.getKey(pKey);
+            fileChangeListener.discard(key);
             LOG.debug("Discard: resource-key : {}", key);
         } catch (final ResourceKeyException e) {
             LOG.warn("Observer was not informed about discard because a problem was reported!", e);

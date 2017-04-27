@@ -10,7 +10,7 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl.key;
 
-import ch.sourcepond.io.fileobserver.api.FileKey;
+import ch.sourcepond.io.fileobserver.api.DispatchKey;
 import org.osgi.framework.Bundle;
 
 import java.nio.file.Path;
@@ -22,12 +22,12 @@ import static java.util.Objects.hash;
 /**
  *
  */
-final class DefaultResourceKey implements FileKey<Bundle> {
-    private final FileKey fileKey;
+final class DefaultResourceKey implements DispatchKey {
+    private final DispatchKey fileKey;
     private final Bundle source;
     private final Path relativePath;
 
-    DefaultResourceKey(final FileKey pFileKey,
+    DefaultResourceKey(final DispatchKey pFileKey,
                        final Bundle pSource,
                        final Path pRelativePath) {
         fileKey = pFileKey;
@@ -41,7 +41,7 @@ final class DefaultResourceKey implements FileKey<Bundle> {
     }
 
     @Override
-    public Bundle getDirectoryKey() {
+    public Object getDirectoryKey() {
         return source;
     }
 

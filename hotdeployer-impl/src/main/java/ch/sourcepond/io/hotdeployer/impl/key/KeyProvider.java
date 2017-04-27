@@ -10,7 +10,7 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl.key;
 
-import ch.sourcepond.io.fileobserver.api.FileKey;
+import ch.sourcepond.io.fileobserver.api.DispatchKey;
 import ch.sourcepond.io.fileobserver.api.KeyDeliveryHook;
 import ch.sourcepond.io.hotdeployer.impl.determinator.BundleDeterminator;
 import org.osgi.framework.Bundle;
@@ -27,7 +27,7 @@ import static org.osgi.framework.Constants.SYSTEM_BUNDLE_ID;
  *
  */
 public class KeyProvider implements KeyDeliveryHook {
-    private final ConcurrentMap<FileKey, Object> keys = new ConcurrentHashMap<>();
+    private final ConcurrentMap<DispatchKey, Object> keys = new ConcurrentHashMap<>();
     private final BundleDeterminator determinator;
 
     KeyProvider(final BundleDeterminator pDeterminator) {
@@ -45,7 +45,7 @@ public class KeyProvider implements KeyDeliveryHook {
     }
 
     @Override
-    public void before(final FileKey pKey) {
+    public void before(final DispatchKey pKey) {
         try {
             final Bundle bundle = determinator.determine(pKey.getRelativePath());
             keys.put(pKey, new DefaultResourceKey(pKey,
@@ -57,22 +57,22 @@ public class KeyProvider implements KeyDeliveryHook {
     }
 
     @Override
-    public void after(final FileKey pKey) {
+    public void after(final DispatchKey pKey) {
         keys.remove(pKey);
     }
 
     @Override
-    public void afterDiscard(final FileKey pKey) {
+    public void afterDiscard(final DispatchKey pKey) {
         after(pKey);
         determinator.clearCacheFor(pKey.getRelativePath());
     }
 
-    public FileKey<Bundle> getKey(final FileKey pKey) throws ResourceKeyException {
+    public DispatchKey getKey(final DispatchKey pKey) throws ResourceKeyException {
         final Object keyOrException = keys.get(pKey);
 
         if (keyOrException instanceof Exception) {
             throw new ResourceKeyException(format("File-key %s could not be adapted to a resource-key!", pKey), (Exception)keyOrException);
         }
-        return (FileKey<Bundle>) keyOrException;
+        return (DispatchKey) keyOrException;
     }
 }

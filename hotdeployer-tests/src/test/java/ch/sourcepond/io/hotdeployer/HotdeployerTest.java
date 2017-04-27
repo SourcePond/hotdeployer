@@ -10,8 +10,9 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.io.hotdeployer;
 
-import ch.sourcepond.io.fileobserver.api.FileKey;
-import ch.sourcepond.io.hotdeployer.api.FileChangeObserver;
+import ch.sourcepond.io.fileobserver.api.DispatchKey;
+import ch.sourcepond.io.fileobserver.api.PathChangeEvent;
+import ch.sourcepond.io.hotdeployer.api.FileChangeListener;
 import ch.sourcepond.testing.BundleContextClassLoaderRule;
 import org.junit.After;
 import org.junit.Before;
@@ -70,8 +71,8 @@ public class HotdeployerTest {
     @Inject
     private BundleContext context;
     private Bundle systemBundle;
-    private final FileChangeObserver observer = mock(FileChangeObserver.class);
-    private ServiceRegistration<FileChangeObserver> hotdeployObserverRegistration;
+    private final FileChangeListener observer = mock(FileChangeListener.class);
+    private ServiceRegistration<FileChangeListener> hotdeployObserverRegistration;
     private Path testFile;
 
     @Configuration
@@ -102,7 +103,7 @@ public class HotdeployerTest {
     public void setup() throws Exception {
         createDirectories(TEST_DIR);
         systemBundle = context.getBundle(SYSTEM_BUNDLE_ID);
-        hotdeployObserverRegistration = context.registerService(FileChangeObserver.class, observer, null);
+        hotdeployObserverRegistration = context.registerService(FileChangeListener.class, observer, null);
     }
 
     @After
@@ -126,11 +127,15 @@ public class HotdeployerTest {
         });
     }
 
-    private FileKey<Bundle> key(final Path pRelativePath, final Bundle pSource) {
-        return argThat(new ArgumentMatcher<FileKey<Bundle>>() {
+    private static boolean isKeyMatching(final DispatchKey pKey, final Path pRelativePath, final Bundle pSource) {
+        return pRelativePath.equals(pKey.getRelativePath()) && pSource.equals(pKey.getDirectoryKey());
+    }
+
+    private static DispatchKey key(final Path pRelativePath, final Bundle pSource) {
+        return argThat(new ArgumentMatcher<DispatchKey>() {
             @Override
-            public boolean matches(final FileKey<Bundle> key) {
-                return pRelativePath.equals(key.getRelativePath()) && pSource.equals(key.getDirectoryKey());
+            public boolean matches(final DispatchKey key) {
+                return isKeyMatching(key, pRelativePath, pSource);
             }
 
             @Override
@@ -139,6 +144,21 @@ public class HotdeployerTest {
             }
         });
     }
+
+    private static PathChangeEvent event(final Path pRelativePath, final Bundle pSource) {
+        return argThat(new ArgumentMatcher<PathChangeEvent>() {
+            @Override
+            public boolean matches(final PathChangeEvent pEvent) {
+                return isKeyMatching(pEvent.getKey(), pRelativePath, pSource);
+            }
+
+            @Override
+            public String toString() {
+                return format("[%s:%s]", pSource, pRelativePath);
+            }
+        });
+    }
+
 
     @Test
     public void verifyKeyRelativeToBundlePath() throws Exception {
@@ -152,7 +172,7 @@ public class HotdeployerTest {
 
         // modified should have been called exactly once
         final Path relativePath = bundleRoot.relativize(testFile);
-        verify(observer, timeout(20000)).modified(key(relativePath, bundle), eq(testFile));
+        verify(observer, timeout(20000)).modified(event(relativePath, bundle));
 
         delete(testFile);
         verify(observer, timeout(10000)).discard(key(relativePath, bundle));
@@ -169,7 +189,7 @@ public class HotdeployerTest {
 
         // modified should have been called exactly once
         final Path relativePath = TEST_DIR.relativize(testFile);
-        verify(observer, timeout(20000)).modified(key(relativePath, systemBundle), eq(testFile));
+        verify(observer, timeout(20000)).modified(event(relativePath, systemBundle));
 
         delete(testFile);
         verify(observer, timeout(10000)).discard(key(relativePath, systemBundle));

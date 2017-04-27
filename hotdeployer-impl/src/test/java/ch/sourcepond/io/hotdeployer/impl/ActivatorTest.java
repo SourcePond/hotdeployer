@@ -10,10 +10,10 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl;
 
-import ch.sourcepond.io.fileobserver.api.FileObserver;
 import ch.sourcepond.io.fileobserver.api.KeyDeliveryHook;
+import ch.sourcepond.io.fileobserver.api.PathChangeListener;
 import ch.sourcepond.io.fileobserver.spi.WatchedDirectory;
-import ch.sourcepond.io.hotdeployer.api.FileChangeObserver;
+import ch.sourcepond.io.hotdeployer.api.FileChangeListener;
 import ch.sourcepond.io.hotdeployer.impl.determinator.BundleDeterminator;
 import ch.sourcepond.io.hotdeployer.impl.determinator.BundleDeterminatorFactory;
 import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
@@ -37,31 +37,31 @@ public class ActivatorTest {
     private static final String DIFFERENT_PREFIX = "$DIFFERENT$_";
     private final Path hotdeployDir = mock(Path.class);
     private final ObserverAdapterFactory adapterFactory = mock(ObserverAdapterFactory.class);
-    private final FileObserver adapter = mock(FileObserver.class);
+    private final PathChangeListener adapter = mock(PathChangeListener.class);
     private final KeyProviderFactory keyProviderFactory = mock(KeyProviderFactory.class);
     private final KeyProvider keyProvider = mock(KeyProvider.class);
     private final BundleDeterminatorFactory bundleDeterminatorFactory = mock(BundleDeterminatorFactory.class);
     private final BundleDeterminator bundleDeterminator = mock(BundleDeterminator.class);
     private final DirectoryFactory directoryFactory = mock(DirectoryFactory.class);
-    private final FileChangeObserver observer = mock(FileChangeObserver.class);
+    private final FileChangeListener observer = mock(FileChangeListener.class);
     private final WatchedDirectory watchedDirectory = mock(WatchedDirectory.class);
     private final ServiceRegistration<WatchedDirectory> watchedDirectoryRegistration = mock(ServiceRegistration.class);
     private final ServiceRegistration<KeyDeliveryHook> hookRegistration = mock(ServiceRegistration.class);
-    private final ServiceRegistration<FileObserver> observerAdapterRegistration = mock(ServiceRegistration.class);
+    private final ServiceRegistration<PathChangeListener> observerAdapterRegistration = mock(ServiceRegistration.class);
     private final BundleContext context = mock(BundleContext.class);
     private final Config config = mock(Config.class);
     private final Activator activator = new Activator(adapterFactory, bundleDeterminatorFactory, directoryFactory, keyProviderFactory);
 
     @Before
     public void setup() throws Exception {
-        when(adapterFactory.createAdapter(ANY_PREFIX, keyProvider, observer)).thenReturn(adapter);
+        when(adapterFactory.createAdapter(keyProvider, observer)).thenReturn(adapter);
         when(keyProviderFactory.createProvider(bundleDeterminator)).thenReturn(keyProvider);
         when(bundleDeterminatorFactory.createDeterminator(context)).thenReturn(bundleDeterminator);
         when(directoryFactory.getHotdeployDir(config)).thenReturn(hotdeployDir);
         when(config.bundleResourceDirectoryPrefix()).thenReturn(ANY_PREFIX);
         when(directoryFactory.newWatchedDirectory(config)).thenReturn(watchedDirectory);
         when(context.registerService(WatchedDirectory.class, watchedDirectory, null)).thenReturn(watchedDirectoryRegistration);
-        when(context.registerService(FileObserver.class, adapter, null)).thenReturn(observerAdapterRegistration);
+        when(context.registerService(PathChangeListener.class, adapter, null)).thenReturn(observerAdapterRegistration);
         when(context.registerService(KeyDeliveryHook.class, keyProvider, null)).thenReturn(hookRegistration);
 
         activator.activate(context, config);
@@ -96,7 +96,7 @@ public class ActivatorTest {
         when(newConfig.bundleResourceDirectoryPrefix()).thenReturn(DIFFERENT_PREFIX);
         when(directoryFactory.newWatchedDirectory(newConfig)).thenReturn(watchedDirectory);
         when(directoryFactory.getHotdeployDir(newConfig)).thenReturn(hotdeployDir);
-        when(adapterFactory.createAdapter(DIFFERENT_PREFIX, keyProvider, observer)).thenReturn(adapter);
+        when(adapterFactory.createAdapter(keyProvider, observer)).thenReturn(adapter);
 
         activator.modify(newConfig);
         final InOrder order = inOrder(bundleDeterminator, observerAdapterRegistration, watchedDirectory);
@@ -115,6 +115,6 @@ public class ActivatorTest {
     @Test
     public void removeObserverNothingRegistered() {
         // This should not cause an exception
-        activator.removeObserver(mock(FileChangeObserver.class));
+        activator.removeObserver(mock(FileChangeListener.class));
     }
 }

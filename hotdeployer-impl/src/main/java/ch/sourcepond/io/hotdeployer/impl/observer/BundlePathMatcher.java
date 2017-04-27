@@ -10,14 +10,23 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl.observer;
 
-import ch.sourcepond.io.fileobserver.api.SimpleDispatchRestriction;
+import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 
 /**
  *
  */
-class DispatchRestrictionProxyFactory {
+class BundlePathMatcher implements PathMatcher {
+    private final PathMatcher matcher;
+    private final BundlePathDeterminator determinator;
 
-    DispatchRestrictionProxy createProxy(final String pPrefix, final SimpleDispatchRestriction pDelegate) {
-        return new DispatchRestrictionProxy(pPrefix, pDelegate);
+    BundlePathMatcher(final PathMatcher pMatcher, final BundlePathDeterminator pDeterminator) {
+        matcher = pMatcher;
+        determinator = pDeterminator;
+    }
+
+    @Override
+    public boolean matches(final Path path) {
+        return determinator.apply(matcher, path);
     }
 }

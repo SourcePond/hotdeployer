@@ -10,8 +10,7 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl.key;
 
-import ch.sourcepond.io.fileobserver.api.FileKey;
-import ch.sourcepond.io.hotdeployer.impl.key.DefaultResourceKey;
+import ch.sourcepond.io.fileobserver.api.DispatchKey;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
 
@@ -20,7 +19,8 @@ import java.nio.file.Path;
 import static java.lang.String.format;
 import static java.util.Objects.hash;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.withSettings;
 
 /**
  *
@@ -30,8 +30,8 @@ public class DefaultResourceKeyTest {
     private final Bundle secondBundle = mock(Bundle.class);
     private final Path firstPath = mock(Path.class, withSettings().name("root"));
     private final Path secondPath = mock(Path.class);
-    private final FileKey firstFileKey = mock(FileKey.class);
-    private final FileKey secondFileKey = mock(FileKey.class);
+    private final DispatchKey firstFileKey = mock(DispatchKey.class);
+    private final DispatchKey secondFileKey = mock(DispatchKey.class);
     private final DefaultResourceKey firstKey = new DefaultResourceKey(firstFileKey, firstBundle, firstPath);
     private DefaultResourceKey secondKey = new DefaultResourceKey(secondFileKey, secondBundle, secondPath);
 

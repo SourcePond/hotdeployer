@@ -13,19 +13,18 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.api;
 
-import ch.sourcepond.io.fileobserver.api.FileKey;
+import ch.sourcepond.io.fileobserver.api.DispatchKey;
+import ch.sourcepond.io.fileobserver.api.PathChangeEvent;
 import ch.sourcepond.io.fileobserver.api.SimpleDispatchRestriction;
-import org.osgi.framework.Bundle;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
 /**
  * <p>Observer to receive notifications about changes on files
  * within a watched directory and its sub-directories.</p>
  * <p><em>Implementations of this interface must be thread-safe.</em></p>
  */
-public interface FileChangeObserver {
+public interface FileChangeListener {
 
     default void setup(SimpleDispatchRestriction pRestriction) {
         // noop by default
@@ -52,11 +51,10 @@ public interface FileChangeObserver {
      *      cache.put(pKey, readObject(pFile));
      * </pre>
      *
-     * @param pKey Relative-path of the modified file, never {@code null}
-     * @param pFile         Readable path, never {@code null}
+     * @param pEvent
      * @throws IOException Thrown, if the modified path could not be read.
      */
-    void modified(FileKey<Bundle> pKey, Path pFile) throws IOException;
+    void modified(PathChangeEvent pEvent) throws IOException;
 
     /**
      * <p>Indicates, that the file or directory with the relative path specified has been discarded for some reason
@@ -76,5 +74,5 @@ public interface FileChangeObserver {
      *
      * @param pKey Relative path of the discarded file or directory, never {@code null}
      */
-    void discard(FileKey<Bundle> pKey);
+    void discard(DispatchKey pKey);
 }

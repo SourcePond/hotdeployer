@@ -10,7 +10,6 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl.observer;
 
-import ch.sourcepond.io.fileobserver.api.PathMatcherBuilder;
 import ch.sourcepond.io.fileobserver.api.SimpleDispatchRestriction;
 
 import java.nio.file.PathMatcher;
@@ -19,41 +18,21 @@ import java.nio.file.PathMatcher;
  *
  */
 class DispatchRestrictionProxy implements SimpleDispatchRestriction {
-    /*
-     * ^(\d+(\.\d+(\.\d+(\.[\d\w-]+)?)?)?)$|^([\[\(]\d+(\.\d+(\.\d+(\.[\d\w-]+)?)?)?(,\s*)?(\d+(\.\d+(\.\d+(\.[\d\w-]+)?)?)?)?(\]|\)))$
-     */
-    static final String VERSION_RANGE_PATTERN = "^(\\d+(\\.\\d+(\\.\\d+(\\.[\\d\\w-]+)?)?)?)$|^" +
-            "([\\[\\(]\\d+(\\.\\d+(\\.\\d+(\\.[\\d\\w-]+)?)?)?(,\\s*)?(\\d+(\\.\\d+(\\.\\d+(\\.[\\d\\w-]+)?)?)?)?" +
-            "(\\]|\\)))$";
-    private static final char[] TO_BE_ESCAPED = {'\\', '^', '$', '.', '|', '?', '*', '+', '(', ')', '[', '{'};
     private final SimpleDispatchRestriction delegate;
-    private final String bundlePrefixPattern;
+    private final BundlePathDeterminator determinator;
 
-    DispatchRestrictionProxy(final String pPrefix, final SimpleDispatchRestriction pDelegate) {
+    DispatchRestrictionProxy(final BundlePathDeterminator pDeterminator, final SimpleDispatchRestriction pDelegate) {
         delegate = pDelegate;
-        bundlePrefixPattern = "^" + escape(pPrefix) + ".*";
-    }
-
-    static String escape(final String pPrefix) {
-        final StringBuilder builder = new StringBuilder(pPrefix);
-        for (final char toBeEscaped : TO_BE_ESCAPED) {
-            for (int i = 0 ; i < builder.length() ; i++) {
-                if (builder.charAt(i) == toBeEscaped) {
-                    builder.insert(i++, '\\');
-                }
-            }
-        }
-        return builder.toString();
+        determinator = pDeterminator;
     }
 
     @Override
-    public PathMatcherBuilder whenPathMatchesPattern(final String pSyntax, final String pPattern) {
-        delegate.whenPathMatchesRegex(bundlePrefixPattern).andRegex(VERSION_RANGE_PATTERN).andPattern(pSyntax, pPattern);
-        return delegate.whenPathMatchesPattern(pSyntax, pPattern);
+    public PathMatcher addPathMatcher(final String pSyntaxAndPattern) {
+        return addPathMatcher(new BundlePathMatcher(delegate.addPathMatcher(pSyntaxAndPattern), determinator));
     }
 
     @Override
-    public PathMatcherBuilder whenPathMatches(final PathMatcher pMatcher) {
-        return delegate.whenPathMatches(pMatcher);
+    public PathMatcher addPathMatcher(final PathMatcher pCustomMatcher) {
+        return delegate.addPathMatcher(pCustomMatcher);
     }
 }

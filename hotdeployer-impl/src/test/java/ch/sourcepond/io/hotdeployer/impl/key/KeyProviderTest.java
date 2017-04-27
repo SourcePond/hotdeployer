@@ -10,7 +10,7 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl.key;
 
-import ch.sourcepond.io.fileobserver.api.FileKey;
+import ch.sourcepond.io.fileobserver.api.DispatchKey;
 import ch.sourcepond.io.hotdeployer.impl.determinator.BundleDeterminationException;
 import ch.sourcepond.io.hotdeployer.impl.determinator.BundleDeterminator;
 import org.junit.Before;
@@ -33,7 +33,7 @@ public class KeyProviderTest {
     private final Path relativePath = mock(Path.class);
     private final Path adjustedRelativePath = mock(Path.class);
     private final Bundle bundle = mock(Bundle.class);
-    private final FileKey<Object> fileKey = mock(FileKey.class);
+    private final DispatchKey fileKey = mock(DispatchKey.class);
     private final BundleDeterminator determinator = mock(BundleDeterminator.class);
     private final KeyProviderFactory factory = new KeyProviderFactory();
     private final KeyProvider provider = factory.createProvider(determinator);
@@ -50,7 +50,7 @@ public class KeyProviderTest {
     @Test
     public void useAdjustedRelativePath() throws Exception {
         provider.before(fileKey);
-        final FileKey<Bundle> key = provider.getKey(fileKey);
+        final DispatchKey key = provider.getKey(fileKey);
         assertNotNull(key);
         assertSame(adjustedRelativePath, key.getRelativePath());
         assertSame(bundle, key.getDirectoryKey());
@@ -62,7 +62,7 @@ public class KeyProviderTest {
     public void useOriginalRelativePath() throws Exception {
         when(bundle.getBundleId()).thenReturn(SYSTEM_BUNDLE_ID);
         provider.before(fileKey);
-        final FileKey<Bundle> key = provider.getKey(fileKey);
+        final DispatchKey key = provider.getKey(fileKey);
         assertNotNull(key);
         assertSame(relativePath, key.getRelativePath());
         assertSame(bundle, key.getDirectoryKey());
