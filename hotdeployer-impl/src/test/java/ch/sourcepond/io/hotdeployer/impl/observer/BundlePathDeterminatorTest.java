@@ -23,9 +23,7 @@ import static java.lang.System.getProperty;
 import static java.nio.file.FileSystems.getDefault;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  *
@@ -60,7 +58,7 @@ public class BundlePathDeterminatorTest {
         final DispatchRestriction restriction = mock(DispatchRestriction.class);
         DispatchRestrictionProxy proxy = determinator.createProxy(restriction);
         proxy.addPathMatcher(matcher);
-        verify(restriction).addPathMatcher(matcher);
+        verify(restriction).addPathMatcher((PathMatcher) argThat(m -> BundlePathMatcher.class.equals(m.getClass())));
     }
 
     @Test

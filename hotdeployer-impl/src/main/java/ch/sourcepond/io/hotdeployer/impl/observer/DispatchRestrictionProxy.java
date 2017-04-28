@@ -29,11 +29,11 @@ class DispatchRestrictionProxy implements SimpleDispatchRestriction {
 
     @Override
     public PathMatcher addPathMatcher(final String pSyntaxAndPattern) {
-        return addPathMatcher(determinator.create(delegate.addPathMatcher(pSyntaxAndPattern)));
+        return addPathMatcher(delegate.addPathMatcher(pSyntaxAndPattern));
     }
 
     @Override
     public PathMatcher addPathMatcher(final PathMatcher pCustomMatcher) {
-        return delegate.addPathMatcher(pCustomMatcher);
+        return delegate.addPathMatcher(determinator.create(pCustomMatcher));
     }
 }

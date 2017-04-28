@@ -31,12 +31,12 @@ import static org.mockito.Mockito.*;
 public class ObserverAdapterTest {
     private final DispatchKey fileKey = mock(DispatchKey.class);
     private final PathChangeEvent event = mock(PathChangeEvent.class);
-    private final DispatchEventProxy eventProxy = mock(DispatchEventProxy.class);
+    private final HotdeployEvent eventProxy = mock(HotdeployEvent.class);
     private final DispatchKey resourceKey = mock(DispatchKey.class);
     private final KeyProvider provider = mock(KeyProvider.class);
     private final FileChangeListener fileChangeListener = mock(FileChangeListener.class);
     private final FileSystem fs = mock(FileSystem.class);
-    private final DispatchEventProxyFactory eventProxyFactory = mock(DispatchEventProxyFactory.class);
+    private final HotdeployEventFactory eventProxyFactory = mock(HotdeployEventFactory.class);
     private final BundlePathDeterminator proxyFactory = mock(BundlePathDeterminator.class);
     private final DispatchRestrictionProxy proxy = mock(DispatchRestrictionProxy.class);
     private final DispatchRestriction restriction = mock(DispatchRestriction.class);

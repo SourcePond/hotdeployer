@@ -11,6 +11,8 @@
     <artifactId>hotdeployer-feature</artifactId>
     <packaging>feature</packaging>
 
+
+
     <dependencies>
         <dependency>
             <scope>provided</scope>

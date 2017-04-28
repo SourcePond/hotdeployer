@@ -12,6 +12,7 @@ package ch.sourcepond.io.hotdeployer;
 
 import ch.sourcepond.io.fileobserver.api.DispatchKey;
 import ch.sourcepond.io.fileobserver.api.PathChangeEvent;
+import ch.sourcepond.io.fileobserver.api.SimpleDispatchRestriction;
 import ch.sourcepond.io.hotdeployer.api.FileChangeListener;
 import ch.sourcepond.testing.BundleContextClassLoaderRule;
 import org.junit.After;
@@ -33,6 +34,7 @@ import org.osgi.framework.ServiceRegistration;
 import javax.inject.Inject;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
@@ -65,13 +67,33 @@ import static org.osgi.framework.Constants.SYSTEM_BUNDLE_ID;
 public class HotdeployerTest {
     private final static Path TEST_DIR = getDefault().getPath(getProperty("user.dir"), "target", "hotdeploy");
 
+    private static class TestListener implements FileChangeListener {
+        final FileChangeListener mock = mock(FileChangeListener.class);
+
+        @Override
+        public void restrict(final SimpleDispatchRestriction pRestriction, final FileSystem pFileSystem) {
+            mock.restrict(pRestriction, pFileSystem);
+            pRestriction.addPathMatcher("glob:**/*");
+        }
+
+        @Override
+        public void modified(final PathChangeEvent pEvent) throws IOException {
+            mock.modified(pEvent);
+        }
+
+        @Override
+        public void discard(final DispatchKey pKey) {
+            mock.discard(pKey);
+        }
+    }
+
     @Rule
     public BundleContextClassLoaderRule rule = new BundleContextClassLoaderRule(this);
 
     @Inject
     private BundleContext context;
     private Bundle systemBundle;
-    private final FileChangeListener observer = mock(FileChangeListener.class);
+    private final TestListener changeListener = new TestListener();
     private ServiceRegistration<FileChangeListener> hotdeployObserverRegistration;
     private Path testFile;
 
@@ -103,7 +125,7 @@ public class HotdeployerTest {
     public void setup() throws Exception {
         createDirectories(TEST_DIR);
         systemBundle = context.getBundle(SYSTEM_BUNDLE_ID);
-        hotdeployObserverRegistration = context.registerService(FileChangeListener.class, observer, null);
+        hotdeployObserverRegistration = context.registerService(FileChangeListener.class, changeListener.mock, null);
     }
 
     @After
@@ -172,10 +194,10 @@ public class HotdeployerTest {
 
         // modified should have been called exactly once
         final Path relativePath = bundleRoot.relativize(testFile);
-        verify(observer, timeout(20000)).modified(event(relativePath, bundle));
+        verify(changeListener.mock, timeout(20000)).modified(event(relativePath, bundle));
 
         delete(testFile);
-        verify(observer, timeout(10000)).discard(key(relativePath, bundle));
+        verify(changeListener.mock, timeout(10000)).discard(key(relativePath, bundle));
     }
 
     @Test
@@ -183,15 +205,15 @@ public class HotdeployerTest {
         testFile = TEST_DIR.resolve("test.txt");
 
         // Write every 500ms something into file; do this 10 times
-        for (int i = 0 ; i < 10 ; i++) {
+        for (int i = 0; i < 10; i++) {
             writeArbitraryContent();
         }
 
         // modified should have been called exactly once
         final Path relativePath = TEST_DIR.relativize(testFile);
-        verify(observer, timeout(20000)).modified(event(relativePath, systemBundle));
+        verify(changeListener.mock, timeout(20000)).modified(event(relativePath, systemBundle));
 
         delete(testFile);
-        verify(observer, timeout(10000)).discard(key(relativePath, systemBundle));
+        verify(changeListener.mock, timeout(10000)).discard(key(relativePath, systemBundle));
     }
 }

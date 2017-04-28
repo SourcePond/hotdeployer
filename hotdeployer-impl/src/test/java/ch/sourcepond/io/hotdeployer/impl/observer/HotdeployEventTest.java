@@ -24,10 +24,10 @@ import static org.mockito.Mockito.when;
 /**
  *
  */
-public class DispatchEventProxyTest {
+public class HotdeployEventTest {
     private final PathChangeEvent event = mock(PathChangeEvent.class);
     private final DispatchKey key = mock(DispatchKey.class);
-    private final DispatchEventProxy proxy = new DispatchEventProxyFactory().create(event, key);
+    private final HotdeployEvent proxy = new HotdeployEventFactory().create(event, key);
 
     @Test
     public void getKey() {

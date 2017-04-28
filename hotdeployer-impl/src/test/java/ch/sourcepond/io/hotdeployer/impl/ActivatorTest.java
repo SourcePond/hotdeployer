@@ -57,6 +57,7 @@ public class ActivatorTest {
     @Before
     public void setup() throws Exception {
         when(hotdeployDir.getFileSystem()).thenReturn(fs);
+        when(watchedDirectory.getDirectory()).thenReturn(hotdeployDir);
         when(adapterFactory.createAdapter(keyProvider, observer)).thenReturn(adapter);
         when(keyProviderFactory.createProvider(bundleDeterminator)).thenReturn(keyProvider);
         when(bundleDeterminatorFactory.createDeterminator(context)).thenReturn(bundleDeterminator);
@@ -77,7 +78,12 @@ public class ActivatorTest {
     }
 
     @Test
-    public void activate() throws Exception {
+    public void activate() {
+        verify(adapterFactory).setConfig(fs, config);
+    }
+
+    @Test
+    public void deactivate() throws Exception {
         activator.deactivate();
         verify(watchedDirectoryRegistration).unregister();
         verify(hookRegistration).unregister();
@@ -89,9 +95,8 @@ public class ActivatorTest {
         verify(bundleDeterminator).setPrefix(ANY_PREFIX);
         activator.modify(config);
         verify(watchedDirectory).relocate(hotdeployDir);
-        verify(adapterFactory).setConfig(fs, config);
+        verify(adapterFactory, times(2)).setConfig(fs, config);
         verifyZeroInteractions(observerAdapterRegistration);
-        verifyNoMoreInteractions(bundleDeterminator, watchedDirectory);
     }
 
     @Test

@@ -21,17 +21,17 @@ import java.nio.file.FileSystem;
  *
  */
 public class ObserverAdapterFactory {
-    private final DispatchEventProxyFactory eventProxyFactory;
+    private final HotdeployEventFactory eventProxyFactory;
     private final BundlePathDeterminator proxyFactory;
 
     // Constructor for activator
     public ObserverAdapterFactory() {
-        this(new DispatchEventProxyFactory(), new BundlePathDeterminator());
+        this(new HotdeployEventFactory(), new BundlePathDeterminator());
     }
 
 
     // Constructor for testing
-    ObserverAdapterFactory(final DispatchEventProxyFactory pEventProxyFactory, final BundlePathDeterminator pProxyFactory) {
+    ObserverAdapterFactory(final HotdeployEventFactory pEventProxyFactory, final BundlePathDeterminator pProxyFactory) {
         eventProxyFactory = pEventProxyFactory;
         proxyFactory = pProxyFactory;
     }

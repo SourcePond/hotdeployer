@@ -16,9 +16,9 @@ import ch.sourcepond.io.fileobserver.api.PathChangeEvent;
 /**
  *
  */
-class DispatchEventProxyFactory {
+class HotdeployEventFactory {
 
-    DispatchEventProxy create(final PathChangeEvent pDelegate, final DispatchKey pKey) {
-        return new DispatchEventProxy(pDelegate, pKey);
+    HotdeployEvent create(final PathChangeEvent pDelegate, final DispatchKey pKey) {
+        return new HotdeployEvent(pDelegate, pKey);
     }
 }

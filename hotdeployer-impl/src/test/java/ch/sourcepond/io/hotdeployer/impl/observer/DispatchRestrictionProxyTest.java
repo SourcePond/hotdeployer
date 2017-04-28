@@ -11,6 +11,7 @@ limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl.observer;
 
 import ch.sourcepond.io.fileobserver.api.SimpleDispatchRestriction;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.nio.file.PathMatcher;
@@ -28,17 +29,21 @@ public class DispatchRestrictionProxyTest {
     private final BundlePathMatcher bundlePathMatcher = mock(BundlePathMatcher.class);
     private final DispatchRestrictionProxy proxy = new DispatchRestrictionProxy(determinator, restriction);
 
-    @Test
-    public void addPathMatcherWithSyntaxAndPattern() {
+    @Before
+    public void setup() {
         when(restriction.addPathMatcher(ANY_SYNTAX_AND_PATTERN)).thenReturn(baseMatcher);
         when(determinator.create(baseMatcher)).thenReturn(bundlePathMatcher);
+    }
+
+    @Test
+    public void addPathMatcherWithSyntaxAndPattern() {
         proxy.addPathMatcher(ANY_SYNTAX_AND_PATTERN);
         verify(restriction).addPathMatcher(bundlePathMatcher);
     }
 
     @Test
     public void addCustomPathMatcher() {
-        proxy.addPathMatcher(bundlePathMatcher);
+        proxy.addPathMatcher(baseMatcher);
         verify(restriction).addPathMatcher(bundlePathMatcher);
     }
 }

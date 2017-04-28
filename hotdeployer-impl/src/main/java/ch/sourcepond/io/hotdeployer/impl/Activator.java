@@ -81,6 +81,7 @@ public class Activator {
         context = pContext;
         config = pConfig;
         watchedDirectory = directoryFactory.newWatchedDirectory(pConfig);
+        adapterFactory.setConfig(watchedDirectory.getDirectory().getFileSystem(), config);
         watchedDirectoryRegistration = pContext.registerService(WatchedDirectory.class, watchedDirectory, null);
         bundleDeterminator = bundleDeterminatorFactory.createDeterminator(pContext);
         bundleDeterminator.setPrefix(pConfig.bundleResourceDirectoryPrefix());

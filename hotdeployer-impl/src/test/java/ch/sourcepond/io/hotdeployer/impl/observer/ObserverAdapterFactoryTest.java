@@ -22,7 +22,7 @@ import static org.mockito.Mockito.*;
  */
 public class ObserverAdapterFactoryTest {
     private static final String BUNDLE_RESOURCE_DIRECTORY_PREFIX = "prefix";
-    private final DispatchEventProxyFactory eventProxyFactory = mock(DispatchEventProxyFactory.class);
+    private final HotdeployEventFactory eventProxyFactory = mock(HotdeployEventFactory.class);
     private final BundlePathDeterminator proxyFactory = mock(BundlePathDeterminator.class);
     private final FileSystem fs = mock(FileSystem.class);
     private final Config config = mock(Config.class);

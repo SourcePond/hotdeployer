@@ -30,12 +30,12 @@ import static org.slf4j.LoggerFactory.getLogger;
  */
 class ObserverAdapter implements PathChangeListener {
     private static final Logger LOG = getLogger(ObserverAdapter.class);
-    private final DispatchEventProxyFactory eventProxyFactory;
+    private final HotdeployEventFactory eventProxyFactory;
     private final BundlePathDeterminator proxyFactory;
     private final KeyProvider keyProvider;
     private final FileChangeListener fileChangeListener;
 
-    ObserverAdapter(final DispatchEventProxyFactory pEventProxyFactory,
+    ObserverAdapter(final HotdeployEventFactory pEventProxyFactory,
                     final BundlePathDeterminator pProxyFactory,
                     final KeyProvider pKeyProvider,
                     final FileChangeListener pFileChangeListener) {

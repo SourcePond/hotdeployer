@@ -18,11 +18,11 @@ import java.nio.file.Path;
 /**
  *
  */
-class DispatchEventProxy implements PathChangeEvent {
+class HotdeployEvent implements PathChangeEvent {
     private final PathChangeEvent delegate;
     private final DispatchKey key;
 
-    DispatchEventProxy(final PathChangeEvent pDelegate, final DispatchKey pKey) {
+    HotdeployEvent(final PathChangeEvent pDelegate, final DispatchKey pKey) {
         delegate = pDelegate;
         key = pKey;
     }
@@ -45,5 +45,10 @@ class DispatchEventProxy implements PathChangeEvent {
     @Override
     public void replay() {
         delegate.replay();
+    }
+
+    @Override
+    public String toString() {
+        return "HotdeployEvent[key: " + getKey() + ", numReplays: " + getNumReplays() + ", file: " + getFile() + "]";
     }
 }
