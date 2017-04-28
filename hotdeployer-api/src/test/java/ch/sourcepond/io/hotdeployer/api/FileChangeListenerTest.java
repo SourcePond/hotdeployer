@@ -17,6 +17,8 @@ import ch.sourcepond.io.fileobserver.api.SimpleDispatchRestriction;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.nio.file.FileSystem;
+
 import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.*;
 
@@ -25,16 +27,17 @@ import static org.mockito.Mockito.*;
  */
 public class FileChangeListenerTest {
     private final SimpleDispatchRestriction restriction = mock(SimpleDispatchRestriction.class);
+    private final FileSystem fs = mock(FileSystem.class);
     private final FileChangeListener observer = mock(FileChangeListener.class);
 
     @Before
     public void setup() {
-        doCallRealMethod().when(observer).setup(notNull());
+        doCallRealMethod().when(observer).restrict(notNull(), notNull());
     }
 
     @Test
     public void verifySetup() {
-        observer.setup(restriction);
+        observer.restrict(restriction, fs);
         verifyZeroInteractions(restriction);
     }
 }

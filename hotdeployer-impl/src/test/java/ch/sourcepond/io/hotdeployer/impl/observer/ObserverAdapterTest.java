@@ -56,7 +56,7 @@ public class ObserverAdapterTest {
     public void restrict() {
         adapter.restrict(restriction, fs);
         verify(restriction).accept(DIRECTORY_KEY);
-        verify(fileChangeListener).setup(proxy);
+        verify(fileChangeListener).restrict(proxy, fs);
     }
 
     @Test

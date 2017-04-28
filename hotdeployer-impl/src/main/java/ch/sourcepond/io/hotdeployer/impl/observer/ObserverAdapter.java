@@ -48,7 +48,7 @@ class ObserverAdapter implements PathChangeListener {
     @Override
     public void restrict(final DispatchRestriction pRestriction, final FileSystem pFileSystem) {
         pRestriction.accept(DIRECTORY_KEY);
-        fileChangeListener.setup(proxyFactory.createProxy(pRestriction));
+        fileChangeListener.restrict(proxyFactory.createProxy(pRestriction), pFileSystem);
     }
 
     @Override

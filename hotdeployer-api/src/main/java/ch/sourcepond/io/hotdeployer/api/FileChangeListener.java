@@ -18,6 +18,7 @@ import ch.sourcepond.io.fileobserver.api.PathChangeEvent;
 import ch.sourcepond.io.fileobserver.api.SimpleDispatchRestriction;
 
 import java.io.IOException;
+import java.nio.file.FileSystem;
 
 /**
  * <p>Observer to receive notifications about changes on files
@@ -26,7 +27,7 @@ import java.io.IOException;
  */
 public interface FileChangeListener {
 
-    default void setup(SimpleDispatchRestriction pRestriction) {
+    default void restrict(final SimpleDispatchRestriction pRestriction, final FileSystem pFileSystem) {
         // noop by default
     }
 
