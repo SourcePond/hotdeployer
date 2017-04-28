@@ -25,6 +25,7 @@ import org.mockito.InOrder;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 
 import static org.mockito.Mockito.*;
@@ -35,6 +36,7 @@ import static org.mockito.Mockito.*;
 public class ActivatorTest {
     private static final String ANY_PREFIX = "$BUNDLE$_";
     private static final String DIFFERENT_PREFIX = "$DIFFERENT$_";
+    private final FileSystem fs = mock(FileSystem.class);
     private final Path hotdeployDir = mock(Path.class);
     private final ObserverAdapterFactory adapterFactory = mock(ObserverAdapterFactory.class);
     private final PathChangeListener adapter = mock(PathChangeListener.class);
@@ -54,6 +56,7 @@ public class ActivatorTest {
 
     @Before
     public void setup() throws Exception {
+        when(hotdeployDir.getFileSystem()).thenReturn(fs);
         when(adapterFactory.createAdapter(keyProvider, observer)).thenReturn(adapter);
         when(keyProviderFactory.createProvider(bundleDeterminator)).thenReturn(keyProvider);
         when(bundleDeterminatorFactory.createDeterminator(context)).thenReturn(bundleDeterminator);
@@ -86,6 +89,7 @@ public class ActivatorTest {
         verify(bundleDeterminator).setPrefix(ANY_PREFIX);
         activator.modify(config);
         verify(watchedDirectory).relocate(hotdeployDir);
+        verify(adapterFactory).setConfig(fs, config);
         verifyZeroInteractions(observerAdapterRegistration);
         verifyNoMoreInteractions(bundleDeterminator, watchedDirectory);
     }
