@@ -10,6 +10,7 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl.observer;
 
+import ch.sourcepond.io.fileobserver.api.DispatchRestriction;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -23,6 +24,7 @@ import static java.nio.file.FileSystems.getDefault;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -51,6 +53,22 @@ public class BundlePathDeterminatorTest {
 
     private void assertNoMatch(final String pBundle, final String pVersionRange) {
         assertFalse(determinator.apply(matcher, toRelativePath(pBundle, pVersionRange)));
+    }
+
+    @Test
+    public void createDispatchRestrictionProxy() {
+        final DispatchRestriction restriction = mock(DispatchRestriction.class);
+        DispatchRestrictionProxy proxy = determinator.createProxy(restriction);
+        proxy.addPathMatcher(matcher);
+        verify(restriction).addPathMatcher(matcher);
+    }
+
+    @Test
+    public void verifyBundlePathMatcher() {
+        final Path path = toRelativePath("$BUNDLE$_com.foo.bar", "1.0.0");
+        when(matcher.matches(path)).thenReturn(true);
+        final BundlePathMatcher bundlePathMatcher = determinator.create(matcher);
+        assertTrue(bundlePathMatcher.matches(path));
     }
 
     @Test
@@ -91,6 +109,9 @@ public class BundlePathDeterminatorTest {
         assertNoMatch("$BUNDLE$_com.foo.bar", "1.0.0,2.0.0)");
         assertNoMatch("$BUNDLE$_com.foo.bar", "1.0.0,2.0.0");
         assertNoMatch("$BUNDLE$_com.foo.bar", "1.0.0, 2.0.0");
+
+        assertNoMatch("com.foo.bar", "1.0.0");
+        assertNoMatch("BUNDLE_com.foo.bar", "1.0.0");
     }
 
     @Test

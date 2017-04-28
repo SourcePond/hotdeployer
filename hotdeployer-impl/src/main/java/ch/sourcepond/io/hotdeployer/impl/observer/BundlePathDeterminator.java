@@ -52,6 +52,10 @@ public class BundlePathDeterminator {
         return new DispatchRestrictionProxy(this, pDelegate);
     }
 
+    BundlePathMatcher create(final PathMatcher pMatcher) {
+        return new BundlePathMatcher(this, pMatcher);
+    }
+
     public void setConfig(final FileSystem pFs, final String pPrefix) {
         symbolicNameMatcher = pFs.getPathMatcher(SYMBOLIC_NAME_PATTERN.replace("${prefix}", escape(pPrefix)));
         versionRangeMatcher = pFs.getPathMatcher(VERSION_RANGE_PATTERN);

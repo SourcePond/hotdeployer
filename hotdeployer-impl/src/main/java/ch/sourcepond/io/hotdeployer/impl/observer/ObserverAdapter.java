@@ -30,13 +30,16 @@ import static org.slf4j.LoggerFactory.getLogger;
  */
 class ObserverAdapter implements PathChangeListener {
     private static final Logger LOG = getLogger(ObserverAdapter.class);
+    private final DispatchEventProxyFactory eventProxyFactory;
     private final BundlePathDeterminator proxyFactory;
     private final KeyProvider keyProvider;
     private final FileChangeListener fileChangeListener;
 
-    ObserverAdapter(final BundlePathDeterminator pProxyFactory,
+    ObserverAdapter(final DispatchEventProxyFactory pEventProxyFactory,
+                    final BundlePathDeterminator pProxyFactory,
                     final KeyProvider pKeyProvider,
                     final FileChangeListener pFileChangeListener) {
+        eventProxyFactory = pEventProxyFactory;
         proxyFactory = pProxyFactory;
         keyProvider = pKeyProvider;
         fileChangeListener = pFileChangeListener;
@@ -58,7 +61,7 @@ class ObserverAdapter implements PathChangeListener {
     public void modified(final PathChangeEvent pEvent) throws IOException {
         try {
             final DispatchKey key = keyProvider.getKey(pEvent.getKey());
-            fileChangeListener.modified(new DispatchEventProxy(pEvent, key));
+            fileChangeListener.modified(eventProxyFactory.create(pEvent, key));
             LOG.debug("Modified: {}", pEvent);
         } catch (final ResourceKeyException e) {
             LOG.warn("Observer was not informed about modification because a problem was reported!", e);

@@ -21,7 +21,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.nio.file.FileSystem;
-import java.nio.file.Path;
 
 import static ch.sourcepond.io.hotdeployer.impl.DirectoryFactory.DIRECTORY_KEY;
 import static org.mockito.Mockito.*;
@@ -30,24 +29,27 @@ import static org.mockito.Mockito.*;
  *
  */
 public class ObserverAdapterTest {
-    private static final String ANY_PREFIX = "anyPrefix";
     private final DispatchKey fileKey = mock(DispatchKey.class);
     private final PathChangeEvent event = mock(PathChangeEvent.class);
+    private final DispatchEventProxy eventProxy = mock(DispatchEventProxy.class);
     private final DispatchKey resourceKey = mock(DispatchKey.class);
     private final KeyProvider provider = mock(KeyProvider.class);
     private final FileChangeListener fileChangeListener = mock(FileChangeListener.class);
     private final FileSystem fs = mock(FileSystem.class);
-    private final Path file = mock(Path.class);
+    private final DispatchEventProxyFactory eventProxyFactory = mock(DispatchEventProxyFactory.class);
     private final BundlePathDeterminator proxyFactory = mock(BundlePathDeterminator.class);
     private final DispatchRestrictionProxy proxy = mock(DispatchRestrictionProxy.class);
     private final DispatchRestriction restriction = mock(DispatchRestriction.class);
-    private final ObserverAdapterFactory factory = new ObserverAdapterFactory(proxyFactory);
+    private final ObserverAdapterFactory factory = new ObserverAdapterFactory(eventProxyFactory, proxyFactory);
     private final PathChangeListener adapter = factory.createAdapter(provider, fileChangeListener);
 
     @Before
     public void setup() throws Exception {
+        when(event.getKey()).thenReturn(fileKey);
+        when(eventProxyFactory.create(event, resourceKey)).thenReturn(eventProxy);
         when(provider.getKey(fileKey)).thenReturn(resourceKey);
-        when(proxyFactory.createProxy( restriction)).thenReturn(proxy);
+        when(proxyFactory.createProxy(restriction)).thenReturn(proxy);
+        when(eventProxyFactory.create(event, fileKey)).thenReturn(eventProxy);
     }
 
     @Test
@@ -66,7 +68,7 @@ public class ObserverAdapterTest {
     @Test
     public void modified() throws Exception {
         adapter.modified(event);
-        verify(fileChangeListener).modified(event);
+        verify(fileChangeListener).modified(eventProxy);
     }
 
     @Test

@@ -21,16 +21,18 @@ import java.nio.file.FileSystem;
  *
  */
 public class ObserverAdapterFactory {
+    private final DispatchEventProxyFactory eventProxyFactory;
     private final BundlePathDeterminator proxyFactory;
 
     // Constructor for activator
     public ObserverAdapterFactory() {
-        this(new BundlePathDeterminator());
+        this(new DispatchEventProxyFactory(), new BundlePathDeterminator());
     }
 
 
     // Constructor for testing
-    ObserverAdapterFactory(final BundlePathDeterminator pProxyFactory) {
+    ObserverAdapterFactory(final DispatchEventProxyFactory pEventProxyFactory, final BundlePathDeterminator pProxyFactory) {
+        eventProxyFactory = pEventProxyFactory;
         proxyFactory = pProxyFactory;
     }
 
@@ -40,6 +42,6 @@ public class ObserverAdapterFactory {
 
     public PathChangeListener createAdapter(final KeyProvider pKeyProvider,
                                             final FileChangeListener pFileChangeListener) {
-        return new ObserverAdapter(proxyFactory, pKeyProvider, pFileChangeListener);
+        return new ObserverAdapter(eventProxyFactory, proxyFactory, pKeyProvider, pFileChangeListener);
     }
 }

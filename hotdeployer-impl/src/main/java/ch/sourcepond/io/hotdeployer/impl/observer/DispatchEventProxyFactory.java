@@ -10,23 +10,15 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl.observer;
 
-import java.nio.file.Path;
-import java.nio.file.PathMatcher;
+import ch.sourcepond.io.fileobserver.api.DispatchKey;
+import ch.sourcepond.io.fileobserver.api.PathChangeEvent;
 
 /**
  *
  */
-class BundlePathMatcher implements PathMatcher {
-    private final PathMatcher matcher;
-    private final BundlePathDeterminator determinator;
+class DispatchEventProxyFactory {
 
-    BundlePathMatcher(final BundlePathDeterminator pDeterminator, final PathMatcher pMatcher) {
-        matcher = pMatcher;
-        determinator = pDeterminator;
-    }
-
-    @Override
-    public boolean matches(final Path path) {
-        return determinator.apply(matcher, path);
+    DispatchEventProxy create(final PathChangeEvent pDelegate, final DispatchKey pKey) {
+        return new DispatchEventProxy(pDelegate, pKey);
     }
 }

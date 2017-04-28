@@ -21,14 +21,15 @@ class DispatchRestrictionProxy implements SimpleDispatchRestriction {
     private final SimpleDispatchRestriction delegate;
     private final BundlePathDeterminator determinator;
 
-    DispatchRestrictionProxy(final BundlePathDeterminator pDeterminator, final SimpleDispatchRestriction pDelegate) {
-        delegate = pDelegate;
+    DispatchRestrictionProxy(final BundlePathDeterminator pDeterminator,
+                             final SimpleDispatchRestriction pDelegate) {
         determinator = pDeterminator;
+        delegate = pDelegate;
     }
 
     @Override
     public PathMatcher addPathMatcher(final String pSyntaxAndPattern) {
-        return addPathMatcher(new BundlePathMatcher(delegate.addPathMatcher(pSyntaxAndPattern), determinator));
+        return addPathMatcher(determinator.create(delegate.addPathMatcher(pSyntaxAndPattern)));
     }
 
     @Override
