@@ -11,13 +11,14 @@ limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl.observer;
 
 import ch.sourcepond.io.fileobserver.api.SimpleDispatchRestriction;
+import ch.sourcepond.io.hotdeployer.api.FileDispatchRestriction;
 
 import java.nio.file.PathMatcher;
 
 /**
  *
  */
-class DispatchRestrictionProxy implements SimpleDispatchRestriction {
+class DispatchRestrictionProxy implements FileDispatchRestriction {
     private final SimpleDispatchRestriction delegate;
     private final BundlePathDeterminator determinator;
 

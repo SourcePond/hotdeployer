@@ -19,6 +19,7 @@ import ch.sourcepond.io.hotdeployer.impl.determinator.BundleNotAvailableExceptio
 import ch.sourcepond.io.hotdeployer.impl.determinator.PostponeQueue;
 import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
 import ch.sourcepond.io.hotdeployer.impl.key.ResourceKeyException;
+import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -33,17 +34,20 @@ import static org.slf4j.LoggerFactory.getLogger;
 class ObserverAdapter implements PathChangeListener {
     private static final Logger LOG = getLogger(ObserverAdapter.class);
     private final PostponeQueue queue;
+    private final BundleContext context;
     private final HotdeployEventFactory eventProxyFactory;
     private final BundlePathDeterminator proxyFactory;
     private final KeyProvider keyProvider;
     private final FileChangeListener fileChangeListener;
 
     ObserverAdapter(final PostponeQueue pQueue,
+                    final BundleContext pContext,
                     final HotdeployEventFactory pEventProxyFactory,
                     final BundlePathDeterminator pProxyFactory,
                     final KeyProvider pKeyProvider,
                     final FileChangeListener pFileChangeListener) {
         queue = pQueue;
+        context = pContext;
         eventProxyFactory = pEventProxyFactory;
         proxyFactory = pProxyFactory;
         keyProvider = pKeyProvider;
@@ -69,7 +73,7 @@ class ObserverAdapter implements PathChangeListener {
             fileChangeListener.modified(eventProxyFactory.create(pEvent, key));
             LOG.debug("Modified: {}", pEvent);
         } catch (final BundleNotAvailableException e) {
-            queue.postpone(pEvent, e);
+            queue.postpone(context, pEvent, e);
         } catch (final ResourceKeyException e) {
             LOG.warn("Observer was not informed about modification because a problem was reported!", e);
         }

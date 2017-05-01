@@ -22,7 +22,9 @@ import ch.sourcepond.io.hotdeployer.impl.observer.ObserverAdapterFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 import java.nio.file.FileSystem;
@@ -45,6 +47,9 @@ public class ActivatorTest {
     private final BundleDeterminatorFactory bundleDeterminatorFactory = mock(BundleDeterminatorFactory.class);
     private final BundleDeterminator bundleDeterminator = mock(BundleDeterminator.class);
     private final DirectoryFactory directoryFactory = mock(DirectoryFactory.class);
+    private final ServiceReference<FileChangeListener> observerRef = mock(ServiceReference.class);
+    private final Bundle observerBundle = mock(Bundle.class);
+    private final BundleContext observerBundleContext = mock(BundleContext.class);
     private final FileChangeListener observer = mock(FileChangeListener.class);
     private final WatchedDirectory watchedDirectory = mock(WatchedDirectory.class);
     private final ServiceRegistration<WatchedDirectory> watchedDirectoryRegistration = mock(ServiceRegistration.class);
@@ -58,18 +63,23 @@ public class ActivatorTest {
     public void setup() throws Exception {
         when(hotdeployDir.getFileSystem()).thenReturn(fs);
         when(watchedDirectory.getDirectory()).thenReturn(hotdeployDir);
-        when(adapterFactory.createAdapter(context, keyProvider, observer)).thenReturn(adapter);
+        when(adapterFactory.createAdapter(observerBundleContext, keyProvider, observer)).thenReturn(adapter);
         when(keyProviderFactory.createProvider(bundleDeterminator)).thenReturn(keyProvider);
         when(bundleDeterminatorFactory.createDeterminator(context)).thenReturn(bundleDeterminator);
         when(directoryFactory.getHotdeployDir(config)).thenReturn(hotdeployDir);
         when(config.bundleResourceDirectoryPrefix()).thenReturn(ANY_PREFIX);
         when(directoryFactory.newWatchedDirectory(config)).thenReturn(watchedDirectory);
         when(context.registerService(WatchedDirectory.class, watchedDirectory, null)).thenReturn(watchedDirectoryRegistration);
-        when(context.registerService(PathChangeListener.class, adapter, null)).thenReturn(observerAdapterRegistration);
         when(context.registerService(KeyDeliveryHook.class, keyProvider, null)).thenReturn(hookRegistration);
 
+        when(observerRef.getBundle()).thenReturn(observerBundle);
+        when(observerBundle.getBundleContext()).thenReturn(observerBundleContext);
+        when(observerBundleContext.getBundle()).thenReturn(observerBundle);
+        when(observerBundleContext.getService(observerRef)).thenReturn(observer);
+        when(observerBundleContext.registerService(PathChangeListener.class, adapter, null)).thenReturn(observerAdapterRegistration);
+
         activator.activate(context, config);
-        activator.addObserver(observer);
+        activator.addListener(observerRef);
     }
 
     @Test
@@ -117,14 +127,14 @@ public class ActivatorTest {
 
     @Test
     public void addRemoveObserver() {
-        activator.addObserver(observer);
-        activator.removeObserver(observer);
+        activator.addListener(observerRef);
+        activator.removeObserver(observerRef);
         verify(observerAdapterRegistration).unregister();
     }
 
     @Test
     public void removeObserverNothingRegistered() {
         // This should not cause an exception
-        activator.removeObserver(mock(FileChangeListener.class));
+        activator.removeObserver(mock(ServiceReference.class));
     }
 }

@@ -17,7 +17,6 @@ import ch.sourcepond.io.fileobserver.api.PathChangeListener;
 import ch.sourcepond.io.hotdeployer.api.FileChangeListener;
 import ch.sourcepond.io.hotdeployer.impl.determinator.BundleNotAvailableException;
 import ch.sourcepond.io.hotdeployer.impl.determinator.PostponeQueue;
-import ch.sourcepond.io.hotdeployer.impl.determinator.PostponeQueueFactory;
 import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
 import ch.sourcepond.io.hotdeployer.impl.key.ResourceKeyException;
 import org.junit.Before;
@@ -27,6 +26,7 @@ import org.osgi.framework.VersionRange;
 
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
+import java.util.concurrent.ExecutorService;
 
 import static ch.sourcepond.io.hotdeployer.impl.DirectoryFactory.DIRECTORY_KEY;
 import static org.mockito.Mockito.*;
@@ -46,11 +46,11 @@ public class ObserverAdapterTest {
     private final BundlePathDeterminator proxyFactory = mock(BundlePathDeterminator.class);
     private final DispatchRestrictionProxy proxy = mock(DispatchRestrictionProxy.class);
     private final DispatchRestriction restriction = mock(DispatchRestriction.class);
-    private final PostponeQueueFactory queueFactory = mock(PostponeQueueFactory.class);
     private final PostponeQueue queue = mock(PostponeQueue.class);
     private final BundleContext context = mock(BundleContext.class);
     private final BundleNotAvailableException bundleNotAvailableException = new BundleNotAvailableException(mock(Path.class), "any", VersionRange.valueOf("(1.0,2.0]"));
-    private final ObserverAdapterFactory factory = new ObserverAdapterFactory(queueFactory, eventProxyFactory, proxyFactory);
+    private final ExecutorService postponeExecutor = mock(ExecutorService.class);
+    private final ObserverAdapterFactory factory = new ObserverAdapterFactory(postponeExecutor, queue, eventProxyFactory, proxyFactory);
     private PathChangeListener adapter;
 
     @Before
@@ -60,7 +60,6 @@ public class ObserverAdapterTest {
         when(provider.getKey(fileKey)).thenReturn(resourceKey);
         when(proxyFactory.createProxy(restriction)).thenReturn(proxy);
         when(eventProxyFactory.create(event, fileKey)).thenReturn(eventProxy);
-        when(queueFactory.createQueue(context)).thenReturn(queue);
         adapter = factory.createAdapter(context, provider, fileChangeListener);
     }
 
@@ -87,7 +86,7 @@ public class ObserverAdapterTest {
     public void modifiedBundleIsNotAvailable() throws Exception {
         doThrow(bundleNotAvailableException).when(provider).getKey(fileKey);
         adapter.modified(event);
-        verify(queue).postpone(event, bundleNotAvailableException);
+        verify(queue).postpone(context, event, bundleNotAvailableException);
     }
 
     @Test

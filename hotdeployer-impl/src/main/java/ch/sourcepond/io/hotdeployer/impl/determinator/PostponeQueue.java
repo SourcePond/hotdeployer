@@ -32,20 +32,17 @@ import static org.slf4j.LoggerFactory.getLogger;
 public class PostponeQueue implements Runnable {
     private static final Logger LOG = getLogger(PostponeQueue.class);
     private final BlockingQueue<BundleAvailableListener> queue;
-    private final BundleContext context;
     private final Logger logger;
     private Config config;
 
     // Constructor for activator
-    PostponeQueue(final BundleContext pContext) {
-        this(pContext, new DelayQueue<>(), LOG);
+    public PostponeQueue() {
+        this(new DelayQueue<>(), LOG);
     }
 
     // Constructor for testing
-    PostponeQueue(final BundleContext pContext,
-                  final BlockingQueue<BundleAvailableListener> pQueue,
+    PostponeQueue(final BlockingQueue<BundleAvailableListener> pQueue,
                   final Logger pLogger) {
-        context = pContext;
         queue = pQueue;
         logger = pLogger;
     }
@@ -64,8 +61,8 @@ public class PostponeQueue implements Runnable {
         });
     }
 
-    private void enqueIfNecessary(final BundleAvailableListener pListener) {
-        for (final Bundle bundle : context.getBundles()) {
+    private void enqueIfNecessary(final BundleContext pContext, final BundleAvailableListener pListener) {
+        for (final Bundle bundle : pContext.getBundles()) {
             if (pListener.tryReplay(bundle)) {
                 return;
             }
@@ -73,7 +70,7 @@ public class PostponeQueue implements Runnable {
         queue.offer(pListener);
     }
 
-    public void postpone(final PathChangeEvent pEvent, final BundleNotAvailableException pCause) {
+    public void postpone(final BundleContext pContext, final PathChangeEvent pEvent, final BundleNotAvailableException pCause) {
         final long timeout = MILLISECONDS.convert(config.bundleAvailabilityTimeout(),
                 config.bundleAvailabilityTimeoutUnit());
 
@@ -81,12 +78,12 @@ public class PostponeQueue implements Runnable {
             logger.debug("Postponed with timout of {} ms: {}", timeout, pEvent);
         }
 
-        final BundleAvailableListener listener = new BundleAvailableListener(queue, context, pEvent, pCause,
+        final BundleAvailableListener listener = new BundleAvailableListener(queue, pContext, pEvent, pCause,
                 now().plus(ofMillis(timeout)).toEpochMilli());
-        context.addBundleListener(listener);
+        pContext.addBundleListener(listener);
 
         // In case the bundle just got available during listener registration...
-        enqueIfNecessary(listener);
+        enqueIfNecessary(pContext, listener);
     }
 
     @Override

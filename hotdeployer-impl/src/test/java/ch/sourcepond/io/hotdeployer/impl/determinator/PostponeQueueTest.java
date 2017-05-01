@@ -54,7 +54,7 @@ public class PostponeQueueTest {
     private final Logger logger = mock(Logger.class);
     private final BundleNotAvailableException exception = new BundleNotAvailableException(bundleKey, ANY_SYMBOLIC_NAME, range);
     private final DelayQueue delayQueue = new DelayQueue<>();
-    private PostponeQueue queue = new PostponeQueue(context, delayQueue, logger);
+    private PostponeQueue queue = new PostponeQueue(delayQueue, logger);
     private BundleAvailableListener listener;
     private BundleAvailableListener listener1;
 
@@ -77,7 +77,7 @@ public class PostponeQueueTest {
 
     @Test(timeout = 2000)
     public void verifyDefaultConstructor() {
-        queue = new PostponeQueue(context);
+        queue = new PostponeQueue();
         setup();
         postpone();
     }
@@ -88,7 +88,7 @@ public class PostponeQueueTest {
 
     @Test
     public void postpone() {
-        queue.postpone(event, exception);
+        queue.postpone(context, event, exception);
         final InOrder order = inOrder(context, event, context);
         order.verify(context).addBundleListener(listener());
         order.verify(context).getBundles();
@@ -104,7 +104,7 @@ public class PostponeQueueTest {
             listener = a.getArgument(0);
             return null;
         }).when(context).addBundleListener(listener());
-        queue.postpone(event, exception);
+        queue.postpone(context, event, exception);
         assertNotNull(listener);
         listener.bundleChanged(new BundleEvent(RESOLVED, bundle));
 
@@ -119,7 +119,7 @@ public class PostponeQueueTest {
     @Test(timeout = 2000)
     public void postponeTimedOut() throws Exception {
         executor.execute(queue);
-        queue.postpone(event, exception);
+        queue.postpone(context, event, exception);
         sleep(100);
         verify(logger).warn("Postponed dispatch of {} failed because timeout! Reason of postpone was: ", event, exception);
     }
@@ -127,7 +127,7 @@ public class PostponeQueueTest {
     @Test(timeout = 2000)
     public void takeInterrupted() throws Exception {
         final BlockingQueue<BundleAvailableListener> q = mock(BlockingQueue.class);
-        queue = new PostponeQueue(context, q, logger);
+        queue = new PostponeQueue(q, logger);
         doThrow(InterruptedException.class).when(q).take();
         queue.run();
         assertTrue(currentThread().isInterrupted());
@@ -151,8 +151,8 @@ public class PostponeQueueTest {
         }).when(context).addBundleListener(argThat(inv -> event1.equals(((BundleAvailableListener) inv).getEvent())));
 
         final BundleNotAvailableException exception1 = new BundleNotAvailableException(bundleKey1, ANY_SYMBOLIC_NAME, range);
-        queue.postpone(event, exception);
-        queue.postpone(event1, exception1);
+        queue.postpone(context, event, exception);
+        queue.postpone(context, event1, exception1);
         assertNotNull(listener);
         assertNotNull(listener1);
 

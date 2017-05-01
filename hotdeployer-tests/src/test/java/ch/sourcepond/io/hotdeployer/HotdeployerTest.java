@@ -12,8 +12,8 @@ package ch.sourcepond.io.hotdeployer;
 
 import ch.sourcepond.io.fileobserver.api.DispatchKey;
 import ch.sourcepond.io.fileobserver.api.PathChangeEvent;
-import ch.sourcepond.io.fileobserver.api.SimpleDispatchRestriction;
 import ch.sourcepond.io.hotdeployer.api.FileChangeListener;
+import ch.sourcepond.io.hotdeployer.api.FileDispatchRestriction;
 import ch.sourcepond.testing.BundleContextClassLoaderRule;
 import org.junit.After;
 import org.junit.Before;
@@ -71,7 +71,7 @@ public class HotdeployerTest {
         final FileChangeListener mock = mock(FileChangeListener.class);
 
         @Override
-        public void restrict(final SimpleDispatchRestriction pRestriction, final FileSystem pFileSystem) {
+        public void restrict(final FileDispatchRestriction pRestriction, final FileSystem pFileSystem) {
             mock.restrict(pRestriction, pFileSystem);
             pRestriction.addPathMatcher("glob:**/*");
         }

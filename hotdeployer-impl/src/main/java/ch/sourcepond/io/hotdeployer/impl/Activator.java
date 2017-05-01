@@ -20,6 +20,7 @@ import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
 import ch.sourcepond.io.hotdeployer.impl.key.KeyProviderFactory;
 import ch.sourcepond.io.hotdeployer.impl.observer.ObserverAdapterFactory;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.*;
 import org.osgi.service.metatype.annotations.Designate;
@@ -54,8 +55,7 @@ public class Activator {
     private WatchedDirectory watchedDirectory;
     private ServiceRegistration<KeyDeliveryHook> hookRegistration;
     private ServiceRegistration<WatchedDirectory> watchedDirectoryRegistration;
-    private ConcurrentMap<FileChangeListener, ServiceRegistration<PathChangeListener>> observers = new ConcurrentHashMap<>();
-    private BundleContext context;
+    private ConcurrentMap<ServiceReference<FileChangeListener>, ServiceRegistration<PathChangeListener>> observers = new ConcurrentHashMap<>();
 
     // Constructor for OSGi DS
     public Activator() {
@@ -78,7 +78,6 @@ public class Activator {
 
     @Activate
     public void activate(final BundleContext pContext, final Config pConfig) throws IOException, URISyntaxException {
-        context = pContext;
         config = pConfig;
         watchedDirectory = directoryFactory.newWatchedDirectory(pConfig);
         adapterFactory.setConfig(watchedDirectory.getDirectory().getFileSystem(), config);
@@ -95,7 +94,7 @@ public class Activator {
         final String previousPrefix = config.bundleResourceDirectoryPrefix();
         final String newPrefix = pConfig.bundleResourceDirectoryPrefix();
         config = pConfig;
-        final Collection<FileChangeListener> toBeRegistered = previousPrefix.equals(newPrefix) ? null :
+        final Collection<ServiceReference<FileChangeListener>> toBeRegistered = previousPrefix.equals(newPrefix) ? null :
                 new ArrayList<>(observers.keySet());
 
         if (toBeRegistered != null) {
@@ -109,7 +108,7 @@ public class Activator {
         } finally {
             adapterFactory.setConfig(hotdeployDir.getFileSystem(), config);
             if (toBeRegistered != null) {
-                toBeRegistered.forEach(this::addObserver);
+                toBeRegistered.forEach(this::addListener);
             }
         }
     }
@@ -129,15 +128,17 @@ public class Activator {
         observers.clear();
     }
 
-    @Reference(policy = DYNAMIC, cardinality = MULTIPLE)
-    public void addObserver(final FileChangeListener pObserver) {
-        observers.put(pObserver, context.registerService(
+    @Reference(policy = DYNAMIC, cardinality = MULTIPLE, unbind = "removeObserver")
+    public void addListener(final ServiceReference<FileChangeListener> pReference) {
+        final BundleContext ctx = pReference.getBundle().getBundleContext();
+        final FileChangeListener listener = ctx.getService(pReference);
+        observers.put(pReference, ctx.registerService(
                 PathChangeListener.class,
-                adapterFactory.createAdapter(context, keyProvider, pObserver),
+                adapterFactory.createAdapter(ctx, keyProvider, listener),
                 null));
     }
 
-    public void removeObserver(final FileChangeListener pObserver) {
+    public void removeObserver(final ServiceReference<FileChangeListener> pObserver) {
         final ServiceRegistration<PathChangeListener> adapterRegistration = observers.remove(pObserver);
         if (adapterRegistration == null) {
             LOG.warn("No adapter was registered for hotdeployer-observer {}", pObserver);

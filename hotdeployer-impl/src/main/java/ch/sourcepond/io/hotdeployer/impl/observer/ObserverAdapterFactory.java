@@ -13,32 +13,58 @@ package ch.sourcepond.io.hotdeployer.impl.observer;
 import ch.sourcepond.io.fileobserver.api.PathChangeListener;
 import ch.sourcepond.io.hotdeployer.api.FileChangeListener;
 import ch.sourcepond.io.hotdeployer.impl.Config;
-import ch.sourcepond.io.hotdeployer.impl.determinator.PostponeQueueFactory;
+import ch.sourcepond.io.hotdeployer.impl.determinator.PostponeQueue;
 import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
 import org.osgi.framework.BundleContext;
 
 import java.nio.file.FileSystem;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  *
  */
 public class ObserverAdapterFactory {
-    private final PostponeQueueFactory queueFactory;
+    private final ExecutorService postponeExecutor;
+    private final PostponeQueue queue;
     private final HotdeployEventFactory eventProxyFactory;
     private final BundlePathDeterminator proxyFactory;
 
     // Constructor for activator
     public ObserverAdapterFactory() {
-        this(new PostponeQueueFactory(), new HotdeployEventFactory(), new BundlePathDeterminator());
+        this(createDefaultExecutor(),
+                new PostponeQueue(),
+                new HotdeployEventFactory(),
+                new BundlePathDeterminator());
     }
 
     // Constructor for testing
-    ObserverAdapterFactory(final PostponeQueueFactory pQueueFactory,
+    ObserverAdapterFactory(final ExecutorService pPostponeExecutor,
+                           final PostponeQueue pQueue,
                            final HotdeployEventFactory pEventProxyFactory,
                            final BundlePathDeterminator pProxyFactory) {
-        queueFactory = pQueueFactory;
+        postponeExecutor = pPostponeExecutor;
+        queue = pQueue;
         eventProxyFactory = pEventProxyFactory;
         proxyFactory = pProxyFactory;
+        postponeExecutor.execute(queue);
+    }
+
+    static ThreadPoolExecutor createDefaultExecutor() {
+        final ThreadPoolExecutor tp = new ThreadPoolExecutor(1,
+                1,
+                60L,
+                SECONDS,
+                new LinkedBlockingQueue<>());
+        tp.allowCoreThreadTimeOut(true);
+        return tp;
+    }
+
+    public void shutdown() {
+        postponeExecutor.shutdown();
     }
 
     public void setConfig(final FileSystem pFileSystem, final Config pConfig) {
@@ -48,13 +74,11 @@ public class ObserverAdapterFactory {
     public PathChangeListener createAdapter(final BundleContext pContext,
                                             final KeyProvider pKeyProvider,
                                             final FileChangeListener pFileChangeListener) {
-        return new ObserverAdapter(queueFactory.createQueue(pContext),
-                eventProxyFactory, proxyFactory,
+        return new ObserverAdapter(queue,
+                pContext,
+                eventProxyFactory,
+                proxyFactory,
                 pKeyProvider,
                 pFileChangeListener);
-    }
-
-    public void shutdown() {
-        queueFactory.shutdown();
     }
 }
