@@ -15,6 +15,7 @@ package ch.sourcepond.io.hotdeployer.api;
 
 import ch.sourcepond.io.fileobserver.api.DispatchKey;
 import ch.sourcepond.io.fileobserver.api.PathChangeEvent;
+import ch.sourcepond.io.fileobserver.api.SimpleDispatchRestriction;
 
 import java.io.IOException;
 import java.nio.file.FileSystem;
@@ -26,7 +27,7 @@ import java.nio.file.FileSystem;
  */
 public interface FileChangeListener {
 
-    default void restrict(final FileDispatchRestriction pRestriction, final FileSystem pFileSystem) {
+    default void restrict(final SimpleDispatchRestriction pRestriction, final FileSystem pFileSystem) {
         // noop by default
     }
 

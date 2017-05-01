@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.api;
 
+import ch.sourcepond.io.fileobserver.api.SimpleDispatchRestriction;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -25,7 +26,7 @@ import static org.mockito.Mockito.*;
  *
  */
 public class FileChangeListenerTest {
-    private final FileDispatchRestriction restriction = mock(FileDispatchRestriction.class);
+    private final SimpleDispatchRestriction restriction = mock(SimpleDispatchRestriction.class);
     private final FileSystem fs = mock(FileSystem.class);
     private final FileChangeListener observer = mock(FileChangeListener.class);
 
