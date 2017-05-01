@@ -15,9 +15,9 @@ import org.junit.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
+import org.osgi.framework.VersionRange;
 
 import java.nio.file.Path;
-import java.util.NoSuchElementException;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -75,8 +75,9 @@ public class BundleDeterminatorTest {
         try {
             determinator.determine(relativePath);
             fail("Exception expected");
-        } catch (final BundleDeterminationException e) {
-            assertEquals(NoSuchElementException.class, e.getCause().getClass());
+        } catch (final BundleNotAvailableException e) {
+            assertEquals(ANY_SYMBOLIC_NAME, e.getSymbolicName());
+            assertEquals(VersionRange.valueOf(ANY_VERSION_RANGE), e.getVersionRange());
         }
     }
 

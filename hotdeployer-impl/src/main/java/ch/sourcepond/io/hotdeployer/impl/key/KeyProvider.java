@@ -13,6 +13,7 @@ package ch.sourcepond.io.hotdeployer.impl.key;
 import ch.sourcepond.io.fileobserver.api.DispatchKey;
 import ch.sourcepond.io.fileobserver.api.KeyDeliveryHook;
 import ch.sourcepond.io.hotdeployer.impl.determinator.BundleDeterminator;
+import ch.sourcepond.io.hotdeployer.impl.determinator.BundleNotAvailableException;
 import org.osgi.framework.Bundle;
 
 import java.nio.file.Path;
@@ -69,6 +70,10 @@ public class KeyProvider implements KeyDeliveryHook {
 
     public DispatchKey getKey(final DispatchKey pKey) throws ResourceKeyException {
         final Object keyOrException = keys.get(pKey);
+
+        if (keyOrException instanceof BundleNotAvailableException) {
+            throw (BundleNotAvailableException)keyOrException;
+        }
 
         if (keyOrException instanceof Exception) {
             throw new ResourceKeyException(format("File-key %s could not be adapted to a resource-key!", pKey), (Exception)keyOrException);

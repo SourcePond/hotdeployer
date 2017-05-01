@@ -19,7 +19,6 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import static java.lang.String.format;
 import static org.osgi.framework.Constants.SYSTEM_BUNDLE_ID;
 
 /**
@@ -82,10 +81,7 @@ public class BundleDeterminator {
         }
 
         if (bundle == null) {
-            throw new NoSuchElementException(format("No bundle found with symbolic-name %s and version %s!\n" +
-                    "The bundle may have been uninstalled. If you still need its resources, move them into\n" +
-                    "a top-level directory because %s is not valid anymore, or, re-install the bundle.",
-                    symbolicName, versionRange, pBundleKey));
+            throw new BundleNotAvailableException(pBundleKey, symbolicName, versionRange);
         }
 
         return bundle;

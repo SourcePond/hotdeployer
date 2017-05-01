@@ -15,12 +15,18 @@ import ch.sourcepond.io.fileobserver.api.DispatchRestriction;
 import ch.sourcepond.io.fileobserver.api.PathChangeEvent;
 import ch.sourcepond.io.fileobserver.api.PathChangeListener;
 import ch.sourcepond.io.hotdeployer.api.FileChangeListener;
+import ch.sourcepond.io.hotdeployer.impl.determinator.BundleNotAvailableException;
+import ch.sourcepond.io.hotdeployer.impl.determinator.PostponeQueue;
+import ch.sourcepond.io.hotdeployer.impl.determinator.PostponeQueueFactory;
 import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
 import ch.sourcepond.io.hotdeployer.impl.key.ResourceKeyException;
 import org.junit.Before;
 import org.junit.Test;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.VersionRange;
 
 import java.nio.file.FileSystem;
+import java.nio.file.Path;
 
 import static ch.sourcepond.io.hotdeployer.impl.DirectoryFactory.DIRECTORY_KEY;
 import static org.mockito.Mockito.*;
@@ -40,8 +46,12 @@ public class ObserverAdapterTest {
     private final BundlePathDeterminator proxyFactory = mock(BundlePathDeterminator.class);
     private final DispatchRestrictionProxy proxy = mock(DispatchRestrictionProxy.class);
     private final DispatchRestriction restriction = mock(DispatchRestriction.class);
-    private final ObserverAdapterFactory factory = new ObserverAdapterFactory(eventProxyFactory, proxyFactory);
-    private final PathChangeListener adapter = factory.createAdapter(provider, fileChangeListener);
+    private final PostponeQueueFactory queueFactory = mock(PostponeQueueFactory.class);
+    private final PostponeQueue queue = mock(PostponeQueue.class);
+    private final BundleContext context = mock(BundleContext.class);
+    private final BundleNotAvailableException bundleNotAvailableException = new BundleNotAvailableException(mock(Path.class), "any", VersionRange.valueOf("(1.0,2.0]"));
+    private final ObserverAdapterFactory factory = new ObserverAdapterFactory(queueFactory, eventProxyFactory, proxyFactory);
+    private PathChangeListener adapter;
 
     @Before
     public void setup() throws Exception {
@@ -50,6 +60,8 @@ public class ObserverAdapterTest {
         when(provider.getKey(fileKey)).thenReturn(resourceKey);
         when(proxyFactory.createProxy(restriction)).thenReturn(proxy);
         when(eventProxyFactory.create(event, fileKey)).thenReturn(eventProxy);
+        when(queueFactory.createQueue(context)).thenReturn(queue);
+        adapter = factory.createAdapter(context, provider, fileChangeListener);
     }
 
     @Test
@@ -72,6 +84,13 @@ public class ObserverAdapterTest {
     }
 
     @Test
+    public void modifiedBundleIsNotAvailable() throws Exception {
+        doThrow(bundleNotAvailableException).when(provider).getKey(fileKey);
+        adapter.modified(event);
+        verify(queue).postpone(event, bundleNotAvailableException);
+    }
+
+    @Test
     public void modifiedExceptionOccurred() throws Exception {
         final ResourceKeyException expected = new ResourceKeyException("any", new Exception());
         doThrow(expected).when(provider).getKey(fileKey);
@@ -86,7 +105,6 @@ public class ObserverAdapterTest {
         verify(fileChangeListener).discard(resourceKey);
     }
 
-
     @Test
     public void discardExceptionOccurred() throws Exception {
         final ResourceKeyException expected = new ResourceKeyException("any", new Exception());
@@ -94,5 +112,12 @@ public class ObserverAdapterTest {
 
         // Should not cause an exception to be thrown
         adapter.discard(fileKey);
+    }
+
+    @Test
+    public void discardWhenBundleIsNotAvailable() throws Exception {
+        doThrow(bundleNotAvailableException).when(provider).getKey(fileKey);
+        adapter.discard(fileKey);
+        verify(queue).dropEvents(fileKey);
     }
 }

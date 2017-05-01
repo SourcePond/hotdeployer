@@ -58,7 +58,7 @@ public class ActivatorTest {
     public void setup() throws Exception {
         when(hotdeployDir.getFileSystem()).thenReturn(fs);
         when(watchedDirectory.getDirectory()).thenReturn(hotdeployDir);
-        when(adapterFactory.createAdapter(keyProvider, observer)).thenReturn(adapter);
+        when(adapterFactory.createAdapter(context, keyProvider, observer)).thenReturn(adapter);
         when(keyProviderFactory.createProvider(bundleDeterminator)).thenReturn(keyProvider);
         when(bundleDeterminatorFactory.createDeterminator(context)).thenReturn(bundleDeterminator);
         when(directoryFactory.getHotdeployDir(config)).thenReturn(hotdeployDir);
@@ -88,6 +88,7 @@ public class ActivatorTest {
         verify(watchedDirectoryRegistration).unregister();
         verify(hookRegistration).unregister();
         verify(observerAdapterRegistration).unregister();
+        verify(adapterFactory).shutdown();
     }
 
     @Test
@@ -105,7 +106,7 @@ public class ActivatorTest {
         when(newConfig.bundleResourceDirectoryPrefix()).thenReturn(DIFFERENT_PREFIX);
         when(directoryFactory.newWatchedDirectory(newConfig)).thenReturn(watchedDirectory);
         when(directoryFactory.getHotdeployDir(newConfig)).thenReturn(hotdeployDir);
-        when(adapterFactory.createAdapter(keyProvider, observer)).thenReturn(adapter);
+        when(adapterFactory.createAdapter(context, keyProvider, observer)).thenReturn(adapter);
 
         activator.modify(newConfig);
         final InOrder order = inOrder(bundleDeterminator, observerAdapterRegistration, watchedDirectory);

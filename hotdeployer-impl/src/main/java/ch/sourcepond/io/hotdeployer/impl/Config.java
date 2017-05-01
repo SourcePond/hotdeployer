@@ -13,6 +13,10 @@ package ch.sourcepond.io.hotdeployer.impl;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
+import java.util.concurrent.TimeUnit;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 /**
  *
  */
@@ -42,4 +46,17 @@ public @interface Config {
                     "(see 'hotdeployDirectoryURI') which should be ignored i.e. not be handled by any observer."
     )
     String[] blacklistPatterns() default "";
+
+    @AttributeDefinition(
+            name="TimeUnit of the bundle availability timeout",
+            description = "Specifies which time-unit is used for property 'bundleAvailabilityTimeout'."
+    )
+    TimeUnit bundleAvailabilityTimeoutUnit() default SECONDS;
+
+    @AttributeDefinition(
+            name="Bundle availability timeout",
+            description = "Specifies after how much time a postponed change event shall be omitted. After the " +
+                    "time elapses, the causing exception of the delay is logged and the event will be dropped."
+    )
+    long bundleAvailabilityTimeout() default 240L;
 }

@@ -120,6 +120,7 @@ public class Activator {
         hookRegistration.unregister();
         observers.forEach((k, v) -> v.unregister());
         observers.clear();
+        adapterFactory.shutdown();
         LOG.info("Activator shutdown");
     }
 
@@ -132,7 +133,7 @@ public class Activator {
     public void addObserver(final FileChangeListener pObserver) {
         observers.put(pObserver, context.registerService(
                 PathChangeListener.class,
-                adapterFactory.createAdapter(keyProvider, pObserver),
+                adapterFactory.createAdapter(context, keyProvider, pObserver),
                 null));
     }
 

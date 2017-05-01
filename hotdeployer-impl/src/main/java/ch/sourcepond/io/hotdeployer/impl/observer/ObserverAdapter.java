@@ -15,6 +15,8 @@ import ch.sourcepond.io.fileobserver.api.DispatchRestriction;
 import ch.sourcepond.io.fileobserver.api.PathChangeEvent;
 import ch.sourcepond.io.fileobserver.api.PathChangeListener;
 import ch.sourcepond.io.hotdeployer.api.FileChangeListener;
+import ch.sourcepond.io.hotdeployer.impl.determinator.BundleNotAvailableException;
+import ch.sourcepond.io.hotdeployer.impl.determinator.PostponeQueue;
 import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
 import ch.sourcepond.io.hotdeployer.impl.key.ResourceKeyException;
 import org.slf4j.Logger;
@@ -30,15 +32,18 @@ import static org.slf4j.LoggerFactory.getLogger;
  */
 class ObserverAdapter implements PathChangeListener {
     private static final Logger LOG = getLogger(ObserverAdapter.class);
+    private final PostponeQueue queue;
     private final HotdeployEventFactory eventProxyFactory;
     private final BundlePathDeterminator proxyFactory;
     private final KeyProvider keyProvider;
     private final FileChangeListener fileChangeListener;
 
-    ObserverAdapter(final HotdeployEventFactory pEventProxyFactory,
+    ObserverAdapter(final PostponeQueue pQueue,
+                    final HotdeployEventFactory pEventProxyFactory,
                     final BundlePathDeterminator pProxyFactory,
                     final KeyProvider pKeyProvider,
                     final FileChangeListener pFileChangeListener) {
+        queue = pQueue;
         eventProxyFactory = pEventProxyFactory;
         proxyFactory = pProxyFactory;
         keyProvider = pKeyProvider;
@@ -63,6 +68,8 @@ class ObserverAdapter implements PathChangeListener {
             final DispatchKey key = keyProvider.getKey(pEvent.getKey());
             fileChangeListener.modified(eventProxyFactory.create(pEvent, key));
             LOG.debug("Modified: {}", pEvent);
+        } catch (final BundleNotAvailableException e) {
+            queue.postpone(pEvent, e);
         } catch (final ResourceKeyException e) {
             LOG.warn("Observer was not informed about modification because a problem was reported!", e);
         }
@@ -74,6 +81,8 @@ class ObserverAdapter implements PathChangeListener {
             final DispatchKey key = keyProvider.getKey(pKey);
             fileChangeListener.discard(key);
             LOG.debug("Discard: resource-key : {}", key);
+        } catch (final BundleNotAvailableException e) {
+            queue.dropEvents(pKey);
         } catch (final ResourceKeyException e) {
             LOG.warn("Observer was not informed about discard because a problem was reported!", e);
         }

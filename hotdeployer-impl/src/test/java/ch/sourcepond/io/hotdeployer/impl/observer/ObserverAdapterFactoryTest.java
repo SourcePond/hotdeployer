@@ -11,6 +11,7 @@ limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl.observer;
 
 import ch.sourcepond.io.hotdeployer.impl.Config;
+import ch.sourcepond.io.hotdeployer.impl.determinator.PostponeQueueFactory;
 import org.junit.Test;
 
 import java.nio.file.FileSystem;
@@ -26,12 +27,19 @@ public class ObserverAdapterFactoryTest {
     private final BundlePathDeterminator proxyFactory = mock(BundlePathDeterminator.class);
     private final FileSystem fs = mock(FileSystem.class);
     private final Config config = mock(Config.class);
-    private final ObserverAdapterFactory factory = new ObserverAdapterFactory(eventProxyFactory, proxyFactory);
+    private final PostponeQueueFactory queueFactory = mock(PostponeQueueFactory.class);
+    private final ObserverAdapterFactory factory = new ObserverAdapterFactory(queueFactory, eventProxyFactory, proxyFactory);
 
     @Test
     public void setConfig() {
         when(config.bundleResourceDirectoryPrefix()).thenReturn(BUNDLE_RESOURCE_DIRECTORY_PREFIX);
         factory.setConfig(fs, config);
         verify(proxyFactory).setConfig(fs, BUNDLE_RESOURCE_DIRECTORY_PREFIX);
+    }
+
+    @Test
+    public void shutdown() {
+        factory.shutdown();
+        verify(queueFactory).shutdown();
     }
 }

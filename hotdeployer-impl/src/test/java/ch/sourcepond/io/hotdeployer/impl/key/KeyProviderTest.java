@@ -13,6 +13,7 @@ package ch.sourcepond.io.hotdeployer.impl.key;
 import ch.sourcepond.io.fileobserver.api.DispatchKey;
 import ch.sourcepond.io.hotdeployer.impl.determinator.BundleDeterminationException;
 import ch.sourcepond.io.hotdeployer.impl.determinator.BundleDeterminator;
+import ch.sourcepond.io.hotdeployer.impl.determinator.BundleNotAvailableException;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
@@ -24,6 +25,7 @@ import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.osgi.framework.Constants.SYSTEM_BUNDLE_ID;
+import static org.osgi.framework.VersionRange.valueOf;
 
 /**
  *
@@ -80,6 +82,19 @@ public class KeyProviderTest {
             fail("Exception expected!");
         } catch (final ResourceKeyException e) {
             assertSame(expected, e.getCause());
+        }
+    }
+
+    @Test
+    public void reThrowBundleNotAvailableException() throws Exception {
+        final BundleNotAvailableException expected = new BundleNotAvailableException(relativePath, "any", valueOf("(1.0,2.0]"));
+        doThrow(expected).when(determinator).determine(relativePath);
+        provider.before(fileKey);
+        try {
+            provider.getKey(fileKey);
+            fail("Exception expected");
+        } catch (final BundleNotAvailableException e) {
+            assertSame(expected, e);
         }
     }
 }

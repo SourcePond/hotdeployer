@@ -13,7 +13,9 @@ package ch.sourcepond.io.hotdeployer.impl.observer;
 import ch.sourcepond.io.fileobserver.api.PathChangeListener;
 import ch.sourcepond.io.hotdeployer.api.FileChangeListener;
 import ch.sourcepond.io.hotdeployer.impl.Config;
+import ch.sourcepond.io.hotdeployer.impl.determinator.PostponeQueueFactory;
 import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
+import org.osgi.framework.BundleContext;
 
 import java.nio.file.FileSystem;
 
@@ -21,17 +23,20 @@ import java.nio.file.FileSystem;
  *
  */
 public class ObserverAdapterFactory {
+    private final PostponeQueueFactory queueFactory;
     private final HotdeployEventFactory eventProxyFactory;
     private final BundlePathDeterminator proxyFactory;
 
     // Constructor for activator
     public ObserverAdapterFactory() {
-        this(new HotdeployEventFactory(), new BundlePathDeterminator());
+        this(new PostponeQueueFactory(), new HotdeployEventFactory(), new BundlePathDeterminator());
     }
 
-
     // Constructor for testing
-    ObserverAdapterFactory(final HotdeployEventFactory pEventProxyFactory, final BundlePathDeterminator pProxyFactory) {
+    ObserverAdapterFactory(final PostponeQueueFactory pQueueFactory,
+                           final HotdeployEventFactory pEventProxyFactory,
+                           final BundlePathDeterminator pProxyFactory) {
+        queueFactory = pQueueFactory;
         eventProxyFactory = pEventProxyFactory;
         proxyFactory = pProxyFactory;
     }
@@ -40,8 +45,16 @@ public class ObserverAdapterFactory {
         proxyFactory.setConfig(pFileSystem, pConfig.bundleResourceDirectoryPrefix());
     }
 
-    public PathChangeListener createAdapter(final KeyProvider pKeyProvider,
+    public PathChangeListener createAdapter(final BundleContext pContext,
+                                            final KeyProvider pKeyProvider,
                                             final FileChangeListener pFileChangeListener) {
-        return new ObserverAdapter(eventProxyFactory, proxyFactory, pKeyProvider, pFileChangeListener);
+        return new ObserverAdapter(queueFactory.createQueue(pContext),
+                eventProxyFactory, proxyFactory,
+                pKeyProvider,
+                pFileChangeListener);
+    }
+
+    public void shutdown() {
+        queueFactory.shutdown();
     }
 }
