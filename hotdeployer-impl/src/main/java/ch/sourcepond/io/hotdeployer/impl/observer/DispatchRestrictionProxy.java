@@ -11,6 +11,7 @@ limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl.observer;
 
 import ch.sourcepond.io.fileobserver.api.SimpleDispatchRestriction;
+import org.osgi.framework.Bundle;
 
 import java.nio.file.PathMatcher;
 
@@ -20,11 +21,14 @@ import java.nio.file.PathMatcher;
 class DispatchRestrictionProxy implements SimpleDispatchRestriction {
     private final SimpleDispatchRestriction delegate;
     private final BundlePathDeterminator determinator;
+    private final Bundle bundle;
 
     DispatchRestrictionProxy(final BundlePathDeterminator pDeterminator,
-                             final SimpleDispatchRestriction pDelegate) {
+                             final SimpleDispatchRestriction pDelegate,
+                             final Bundle pBundle) {
         determinator = pDeterminator;
         delegate = pDelegate;
+        bundle = pBundle;
     }
 
     @Override
@@ -34,6 +38,6 @@ class DispatchRestrictionProxy implements SimpleDispatchRestriction {
 
     @Override
     public PathMatcher addPathMatcher(final PathMatcher pCustomMatcher) {
-        return delegate.addPathMatcher(determinator.create(pCustomMatcher));
+        return delegate.addPathMatcher(determinator.create(pCustomMatcher, bundle));
     }
 }

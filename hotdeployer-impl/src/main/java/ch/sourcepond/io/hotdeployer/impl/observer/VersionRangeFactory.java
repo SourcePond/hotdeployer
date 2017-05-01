@@ -10,27 +10,14 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl.observer;
 
-import org.osgi.framework.Bundle;
-
-import java.nio.file.Path;
-import java.nio.file.PathMatcher;
+import org.osgi.framework.VersionRange;
 
 /**
  *
  */
-class BundlePathMatcher implements PathMatcher {
-    private final PathMatcher matcher;
-    private final BundlePathDeterminator determinator;
-    private final Bundle bundle;
+class VersionRangeFactory {
 
-    BundlePathMatcher(final BundlePathDeterminator pDeterminator, final Bundle pBundle, final PathMatcher pMatcher) {
-        matcher = pMatcher;
-        determinator = pDeterminator;
-        bundle = pBundle;
-    }
-
-    @Override
-    public boolean matches(final Path path) {
-        return determinator.apply(matcher, bundle, path);
+    public VersionRange createVersion(final String pVersionRange) {
+        return VersionRange.valueOf(pVersionRange);
     }
 }

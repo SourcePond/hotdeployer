@@ -13,6 +13,9 @@ package ch.sourcepond.io.hotdeployer.impl.observer;
 import ch.sourcepond.io.fileobserver.api.DispatchRestriction;
 import org.junit.Before;
 import org.junit.Test;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Version;
+import org.osgi.framework.VersionRange;
 
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
@@ -29,13 +32,24 @@ import static org.mockito.Mockito.*;
  *
  */
 public class BundlePathDeterminatorTest {
+    public static final String PREFIX = "$BUNDLE$_";
     private final FileSystem fs = getDefault();
     private final Path root = fs.getPath(getProperty("user.dir"));
     private final PathMatcher matcher = mock(PathMatcher.class);
-    private final BundlePathDeterminator determinator = new BundlePathDeterminator();
+    private final Bundle bundle = mock(Bundle.class);
+    private VersionRangeFactory versionRangeFactory = mock(VersionRangeFactory.class);
+    private BundlePathDeterminator determinator = new BundlePathDeterminator(versionRangeFactory);
+    private VersionRange versionRange = mock(VersionRange.class);
 
     @Before
     public void setup() {
+        when(versionRangeFactory.createVersion(notNull())).thenReturn(versionRange);
+        when(versionRange.includes(notNull())).thenReturn(true);
+        setupWithoutVersionRangeFactory();
+    }
+
+    private void setupWithoutVersionRangeFactory() {
+        when(bundle.getVersion()).thenReturn(Version.valueOf("1.0.0"));
         when(matcher.matches(argThat(p -> p.toString().equals("test.xml")))).thenReturn(true);
         determinator.setConfig(fs, "$BUNDLE$_");
     }
@@ -46,17 +60,17 @@ public class BundlePathDeterminatorTest {
     }
 
     private void assertMatch(final String pBundle, final String pVersionRange) {
-        assertTrue(determinator.apply(matcher, toRelativePath(pBundle, pVersionRange)));
+        assertTrue(determinator.apply(matcher, bundle, toRelativePath(pBundle, pVersionRange)));
     }
 
     private void assertNoMatch(final String pBundle, final String pVersionRange) {
-        assertFalse(determinator.apply(matcher, toRelativePath(pBundle, pVersionRange)));
+        assertFalse(determinator.apply(matcher, bundle, toRelativePath(pBundle, pVersionRange)));
     }
 
     @Test
     public void createDispatchRestrictionProxy() {
         final DispatchRestriction restriction = mock(DispatchRestriction.class);
-        DispatchRestrictionProxy proxy = determinator.createProxy(restriction);
+        DispatchRestrictionProxy proxy = determinator.createProxy(restriction, bundle);
         proxy.addPathMatcher(matcher);
         verify(restriction).addPathMatcher((PathMatcher) argThat(m -> BundlePathMatcher.class.equals(m.getClass())));
     }
@@ -65,42 +79,42 @@ public class BundlePathDeterminatorTest {
     public void verifyBundlePathMatcher() {
         final Path path = toRelativePath("$BUNDLE$_com.foo.bar", "1.0.0");
         when(matcher.matches(path)).thenReturn(true);
-        final BundlePathMatcher bundlePathMatcher = determinator.create(matcher);
+        final BundlePathMatcher bundlePathMatcher = determinator.create(matcher, bundle);
         assertTrue(bundlePathMatcher.matches(path));
     }
 
     @Test
     public void verifyVersionRangePattern() {
         assertMatch("$BUNDLE$_com.foo.bar", "1.0.0");
-        assertMatch("$BUNDLE$_com.foo.bar", "[1.0.0,]");
+        assertMatch("$BUNDLE$_com.foo.bar", "[1.0.0, ]");
         assertMatch("$BUNDLE$_com.foo.bar", "[1.0.0,2.0.0]");
         assertMatch("$BUNDLE$_com.foo.bar", "[1.0.0, 2.0.0]");
-        assertMatch("$BUNDLE$_com.foo.bar", "[1.0.0,)");
+        assertMatch("$BUNDLE$_com.foo.bar", "[1.0.0, )");
         assertMatch("$BUNDLE$_com.foo.bar", "[1.0.0,2.0.0)");
         assertMatch("$BUNDLE$_com.foo.bar", "[1.0.0, 2.0.0)");
-        assertMatch("$BUNDLE$_com.foo.bar", "(1.0.0,)");
+        assertMatch("$BUNDLE$_com.foo.bar", "(1.0.0, )");
         assertMatch("$BUNDLE$_com.foo.bar", "(1.0.0,2.0.0)");
         assertMatch("$BUNDLE$_com.foo.bar", "(1.0.0, 2.0.0)");
-        assertMatch("$BUNDLE$_com.foo.bar", "(1.0.0,]");
+        assertMatch("$BUNDLE$_com.foo.bar", "(1.0.0, ]");
         assertMatch("$BUNDLE$_com.foo.bar", "(1.0.0,2.0.0]");
         assertMatch("$BUNDLE$_com.foo.bar", "(1.0.0, 2.0.0]");
 
         assertMatch("$BUNDLE$_com.foo.bar", "1.0.0.v2017_10-10CND");
-        assertMatch("$BUNDLE$_com.foo.bar", "[1.0.0.v2017_10-10CND,]");
+        assertMatch("$BUNDLE$_com.foo.bar", "[1.0.0.v2017_10-10CND, ]");
         assertMatch("$BUNDLE$_com.foo.bar", "[1.0.0.v2017_10-10CND,2.0.0.v2017_10-10CND]");
         assertMatch("$BUNDLE$_com.foo.bar", "[1.0.0.v2017_10-10CND, 2.0.0.v2017_10-10CND]");
-        assertMatch("$BUNDLE$_com.foo.bar", "[1.0.0.v2017_10-10CND,)");
+        assertMatch("$BUNDLE$_com.foo.bar", "[1.0.0.v2017_10-10CND, )");
         assertMatch("$BUNDLE$_com.foo.bar", "[1.0.0.v2017_10-10CND,2.0.0.v2017_10-10CND)");
         assertMatch("$BUNDLE$_com.foo.bar", "[1.0.0.v2017_10-10CND, 2.0.0.v2017_10-10CND)");
-        assertMatch("$BUNDLE$_com.foo.bar", "(1.0.0.v2017_10-10CND,)");
+        assertMatch("$BUNDLE$_com.foo.bar", "(1.0.0.v2017_10-10CND, )");
         assertMatch("$BUNDLE$_com.foo.bar", "(1.0.0.v2017_10-10CND,2.0.0.v2017_10-10CND)");
         assertMatch("$BUNDLE$_com.foo.bar", "(1.0.0.v2017_10-10CND, 2.0.0.v2017_10-10CND)");
-        assertMatch("$BUNDLE$_com.foo.bar", "(1.0.0.v2017_10-10CND,]");
+        assertMatch("$BUNDLE$_com.foo.bar", "(1.0.0.v2017_10-10CND, ]");
         assertMatch("$BUNDLE$_com.foo.bar", "(1.0.0.v2017_10-10CND,2.0.0.v2017_10-10CND]");
         assertMatch("$BUNDLE$_com.foo.bar", "(1.0.0.v2017_10-10CND, 2.0.0.v2017_10-10CND]");
 
         assertNoMatch("$BUNDLE$_com.foo.bar", "V1.0.0");
-        assertNoMatch("$BUNDLE$_com.foo.bar", "[V1.0.0,]");
+        assertNoMatch("$BUNDLE$_com.foo.bar", "[V1.0.0, ]");
         assertNoMatch("$BUNDLE$_com.foo.bar", "[V1.0.0,2.0.0]");
         assertNoMatch("$BUNDLE$_com.foo.bar", "[1.0.0, V2.0.0]");
         assertNoMatch("$BUNDLE$_com.foo.bar", "[1.0.0,");
@@ -126,5 +140,21 @@ public class BundlePathDeterminatorTest {
         assertEquals("TES\\)T", escape("TES)T"));
         assertEquals("T\\[EST", escape("T[EST"));
         assertEquals("T\\{EST", escape("T{EST"));
+    }
+
+    @Test
+    public void verifyRealVersionRange() {
+        versionRangeFactory = new VersionRangeFactory();
+        determinator = new BundlePathDeterminator(versionRangeFactory);
+        determinator.setConfig(fs, PREFIX);
+        assertMatch("$BUNDLE$_com.foo.bar", "1.0.0");
+        assertMatch("$BUNDLE$_com.foo.bar", "[1.0.0, 1.0.0]");
+        assertMatch("$BUNDLE$_com.foo.bar", "[1.0.0,2.0.0]");
+        assertMatch("$BUNDLE$_com.foo.bar", "[1.0.0, 2.0.0]");
+        assertMatch("$BUNDLE$_com.foo.bar", "[1.0.0, 2.0.0)");
+        assertMatch("$BUNDLE$_com.foo.bar", "[1.0.0,2.0.0)");
+        assertNoMatch("$BUNDLE$_com.foo.bar", "(1.0.0, 2.0.0)");
+        assertNoMatch("$BUNDLE$_com.foo.bar", "(1.0.0, ]");
+        assertNoMatch("$BUNDLE$_com.foo.bar", "(1.0.0, )");
     }
 }
