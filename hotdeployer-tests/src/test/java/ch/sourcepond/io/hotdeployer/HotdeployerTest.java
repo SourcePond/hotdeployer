@@ -11,8 +11,8 @@ limitations under the License.*/
 package ch.sourcepond.io.hotdeployer;
 
 import ch.sourcepond.io.fileobserver.api.DispatchKey;
-import ch.sourcepond.io.fileobserver.api.PathChangeEvent;
 import ch.sourcepond.io.fileobserver.api.SimpleDispatchRestriction;
+import ch.sourcepond.io.hotdeployer.api.FileChangeEvent;
 import ch.sourcepond.io.hotdeployer.api.FileChangeListener;
 import ch.sourcepond.testing.BundleContextClassLoaderRule;
 import org.junit.After;
@@ -77,7 +77,7 @@ public class HotdeployerTest {
         }
 
         @Override
-        public void modified(final PathChangeEvent pEvent) throws IOException {
+        public void modified(final FileChangeEvent pEvent) throws IOException {
             mock.modified(pEvent);
         }
 
@@ -167,10 +167,10 @@ public class HotdeployerTest {
         });
     }
 
-    private static PathChangeEvent event(final Path pRelativePath, final Bundle pSource) {
-        return argThat(new ArgumentMatcher<PathChangeEvent>() {
+    private static FileChangeEvent event(final Path pRelativePath, final Bundle pSource) {
+        return argThat(new ArgumentMatcher<FileChangeEvent>() {
             @Override
-            public boolean matches(final PathChangeEvent pEvent) {
+            public boolean matches(final FileChangeEvent pEvent) {
                 return isKeyMatching(pEvent.getKey(), pRelativePath, pSource);
             }
 

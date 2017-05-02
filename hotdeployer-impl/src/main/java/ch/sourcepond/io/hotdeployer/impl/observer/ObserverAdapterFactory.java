@@ -15,7 +15,6 @@ import ch.sourcepond.io.hotdeployer.api.FileChangeListener;
 import ch.sourcepond.io.hotdeployer.impl.Config;
 import ch.sourcepond.io.hotdeployer.impl.determinator.PostponeQueue;
 import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
-import org.osgi.framework.BundleContext;
 
 import java.nio.file.FileSystem;
 
@@ -44,12 +43,10 @@ public class ObserverAdapterFactory {
         proxyFactory.setConfig(pFileSystem, pConfig.bundleResourceDirectoryPrefix());
     }
 
-    public PathChangeListener createAdapter(final BundleContext pContext,
-                                            final PostponeQueue pQueue,
+    public PathChangeListener createAdapter(final PostponeQueue pQueue,
                                             final KeyProvider pKeyProvider,
                                             final FileChangeListener pFileChangeListener) {
         return new ObserverAdapter(pQueue,
-                pContext,
                 eventProxyFactory,
                 proxyFactory,
                 pKeyProvider,

@@ -14,7 +14,6 @@ limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.api;
 
 import ch.sourcepond.io.fileobserver.api.DispatchKey;
-import ch.sourcepond.io.fileobserver.api.PathChangeEvent;
 import ch.sourcepond.io.fileobserver.api.SimpleDispatchRestriction;
 
 import java.io.IOException;
@@ -55,7 +54,7 @@ public interface FileChangeListener {
      * @param pEvent
      * @throws IOException Thrown, if the modified path could not be read.
      */
-    void modified(PathChangeEvent pEvent) throws IOException;
+    void modified(FileChangeEvent pEvent) throws IOException;
 
     /**
      * <p>Indicates, that the file or directory with the relative path specified has been discarded for some reason

@@ -17,16 +17,15 @@ import ch.sourcepond.io.fileobserver.api.PathChangeListener;
 import ch.sourcepond.io.hotdeployer.api.FileChangeListener;
 import ch.sourcepond.io.hotdeployer.impl.determinator.BundleNotAvailableException;
 import ch.sourcepond.io.hotdeployer.impl.determinator.PostponeQueue;
+import ch.sourcepond.io.hotdeployer.impl.key.DefaultResourceKey;
 import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
 import ch.sourcepond.io.hotdeployer.impl.key.ResourceKeyException;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.VersionRange;
 
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
-import java.util.concurrent.ExecutorService;
 
 import static ch.sourcepond.io.hotdeployer.impl.DirectoryFactory.DIRECTORY_KEY;
 import static org.mockito.Mockito.*;
@@ -38,7 +37,7 @@ public class ObserverAdapterTest {
     private final DispatchKey fileKey = mock(DispatchKey.class);
     private final PathChangeEvent event = mock(PathChangeEvent.class);
     private final HotdeployEvent eventProxy = mock(HotdeployEvent.class);
-    private final DispatchKey resourceKey = mock(DispatchKey.class);
+    private final DefaultResourceKey resourceKey = mock(DefaultResourceKey.class);
     private final KeyProvider provider = mock(KeyProvider.class);
     private final FileChangeListener fileChangeListener = mock(FileChangeListener.class);
     private final FileSystem fs = mock(FileSystem.class);
@@ -47,9 +46,7 @@ public class ObserverAdapterTest {
     private final DispatchRestrictionProxy proxy = mock(DispatchRestrictionProxy.class);
     private final DispatchRestriction restriction = mock(DispatchRestriction.class);
     private final PostponeQueue queue = mock(PostponeQueue.class);
-    private final BundleContext context = mock(BundleContext.class);
     private final BundleNotAvailableException bundleNotAvailableException = new BundleNotAvailableException(mock(Path.class), "any", VersionRange.valueOf("(1.0,2.0]"));
-    private final ExecutorService postponeExecutor = mock(ExecutorService.class);
     private final ObserverAdapterFactory factory = new ObserverAdapterFactory(eventProxyFactory, proxyFactory);
     private PathChangeListener adapter;
 
@@ -59,8 +56,8 @@ public class ObserverAdapterTest {
         when(eventProxyFactory.create(event, resourceKey)).thenReturn(eventProxy);
         when(provider.getKey(fileKey)).thenReturn(resourceKey);
         when(proxyFactory.createProxy(restriction)).thenReturn(proxy);
-        when(eventProxyFactory.create(event, fileKey)).thenReturn(eventProxy);
-        adapter = factory.createAdapter(context, queue, provider, fileChangeListener);
+        when(eventProxyFactory.create(event, resourceKey)).thenReturn(eventProxy);
+        adapter = factory.createAdapter(queue, provider, fileChangeListener);
     }
 
     @Test

@@ -12,19 +12,27 @@ package ch.sourcepond.io.hotdeployer.impl.observer;
 
 import ch.sourcepond.io.fileobserver.api.DispatchKey;
 import ch.sourcepond.io.fileobserver.api.PathChangeEvent;
+import ch.sourcepond.io.hotdeployer.api.FileChangeEvent;
+import ch.sourcepond.io.hotdeployer.impl.key.DefaultResourceKey;
+import org.osgi.framework.Bundle;
 
 import java.nio.file.Path;
 
 /**
  *
  */
-class HotdeployEvent implements PathChangeEvent {
+class HotdeployEvent implements FileChangeEvent {
     private final PathChangeEvent delegate;
-    private final DispatchKey key;
+    private final DefaultResourceKey key;
 
-    HotdeployEvent(final PathChangeEvent pDelegate, final DispatchKey pKey) {
+    HotdeployEvent(final PathChangeEvent pDelegate, final DefaultResourceKey pKey) {
         delegate = pDelegate;
         key = pKey;
+    }
+
+    @Override
+    public Bundle getSourceBundle() {
+        return key.getDirectoryKey();
     }
 
     @Override

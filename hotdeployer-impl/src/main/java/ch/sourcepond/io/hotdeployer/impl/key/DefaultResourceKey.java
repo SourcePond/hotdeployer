@@ -22,7 +22,7 @@ import static java.util.Objects.hash;
 /**
  *
  */
-final class DefaultResourceKey implements DispatchKey {
+public class DefaultResourceKey implements DispatchKey {
     private final DispatchKey fileKey;
     private final Bundle source;
     private final Path relativePath;
@@ -41,7 +41,7 @@ final class DefaultResourceKey implements DispatchKey {
     }
 
     @Override
-    public Object getDirectoryKey() {
+    public Bundle getDirectoryKey() {
         return source;
     }
 

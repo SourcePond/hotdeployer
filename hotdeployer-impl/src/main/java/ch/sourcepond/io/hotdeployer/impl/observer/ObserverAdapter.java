@@ -17,9 +17,9 @@ import ch.sourcepond.io.fileobserver.api.PathChangeListener;
 import ch.sourcepond.io.hotdeployer.api.FileChangeListener;
 import ch.sourcepond.io.hotdeployer.impl.determinator.BundleNotAvailableException;
 import ch.sourcepond.io.hotdeployer.impl.determinator.PostponeQueue;
+import ch.sourcepond.io.hotdeployer.impl.key.DefaultResourceKey;
 import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
 import ch.sourcepond.io.hotdeployer.impl.key.ResourceKeyException;
-import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -34,20 +34,17 @@ import static org.slf4j.LoggerFactory.getLogger;
 class ObserverAdapter implements PathChangeListener {
     private static final Logger LOG = getLogger(ObserverAdapter.class);
     private final PostponeQueue queue;
-    private final BundleContext context;
     private final HotdeployEventFactory eventProxyFactory;
     private final BundlePathDeterminator proxyFactory;
     private final KeyProvider keyProvider;
     private final FileChangeListener fileChangeListener;
 
     ObserverAdapter(final PostponeQueue pQueue,
-                    final BundleContext pContext,
                     final HotdeployEventFactory pEventProxyFactory,
                     final BundlePathDeterminator pProxyFactory,
                     final KeyProvider pKeyProvider,
                     final FileChangeListener pFileChangeListener) {
         queue = pQueue;
-        context = pContext;
         eventProxyFactory = pEventProxyFactory;
         proxyFactory = pProxyFactory;
         keyProvider = pKeyProvider;
@@ -69,7 +66,7 @@ class ObserverAdapter implements PathChangeListener {
     @Override
     public void modified(final PathChangeEvent pEvent) throws IOException {
         try {
-            final DispatchKey key = keyProvider.getKey(pEvent.getKey());
+            final DefaultResourceKey key = keyProvider.getKey(pEvent.getKey());
             fileChangeListener.modified(eventProxyFactory.create(pEvent, key));
             LOG.debug("Modified: {}", pEvent);
         } catch (final BundleNotAvailableException e) {

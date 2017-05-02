@@ -10,24 +10,35 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl.observer;
 
-import ch.sourcepond.io.fileobserver.api.DispatchKey;
 import ch.sourcepond.io.fileobserver.api.PathChangeEvent;
+import ch.sourcepond.io.hotdeployer.impl.key.DefaultResourceKey;
+import org.junit.Before;
 import org.junit.Test;
+import org.osgi.framework.Bundle;
 
 import java.nio.file.Path;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  *
  */
 public class HotdeployEventTest {
+    private final Bundle sourceBundle = mock(Bundle.class);
     private final PathChangeEvent event = mock(PathChangeEvent.class);
-    private final DispatchKey key = mock(DispatchKey.class);
+    private final DefaultResourceKey key = mock(DefaultResourceKey.class);
     private final HotdeployEvent proxy = new HotdeployEventFactory().create(event, key);
+
+    @Before
+    public void setup() {
+        when(key.getDirectoryKey()).thenReturn(sourceBundle);
+    }
+
+    @Test
+    public void getSourceBundle() {
+        assertSame(sourceBundle, proxy.getSourceBundle());
+    }
 
     @Test
     public void getKey() {
@@ -51,5 +62,11 @@ public class HotdeployEventTest {
     public void replay() {
         proxy.replay();
         verify(event).replay();
+    }
+
+    @Test
+    public void verifyToString() {
+        // Should not throw an exception
+        proxy.toString();
     }
 }

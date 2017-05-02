@@ -68,7 +68,7 @@ public class KeyProvider implements KeyDeliveryHook {
         determinator.clearCacheFor(pKey.getRelativePath());
     }
 
-    public DispatchKey getKey(final DispatchKey pKey) throws ResourceKeyException {
+    public DefaultResourceKey getKey(final DispatchKey pKey) throws ResourceKeyException {
         final Object keyOrException = keys.get(pKey);
 
         if (keyOrException instanceof BundleNotAvailableException) {
@@ -78,6 +78,6 @@ public class KeyProvider implements KeyDeliveryHook {
         if (keyOrException instanceof Exception) {
             throw new ResourceKeyException(format("File-key %s could not be adapted to a resource-key!", pKey), (Exception)keyOrException);
         }
-        return (DispatchKey) keyOrException;
+        return (DefaultResourceKey) keyOrException;
     }
 }

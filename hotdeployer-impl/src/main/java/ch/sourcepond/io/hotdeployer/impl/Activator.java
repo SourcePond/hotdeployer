@@ -148,7 +148,7 @@ public class Activator {
         final FileChangeListener listener = context.getService(pReference);
         observers.put(pReference, context.registerService(
                 PathChangeListener.class,
-                adapterFactory.createAdapter(context, queue, keyProvider, listener),
+                adapterFactory.createAdapter(queue, keyProvider, listener),
                 null));
     }
 

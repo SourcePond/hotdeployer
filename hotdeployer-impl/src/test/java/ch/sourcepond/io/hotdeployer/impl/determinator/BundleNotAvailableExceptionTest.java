@@ -8,17 +8,18 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.*/
-package ch.sourcepond.io.hotdeployer.impl.observer;
+package ch.sourcepond.io.hotdeployer.impl.determinator;
 
-import ch.sourcepond.io.fileobserver.api.PathChangeEvent;
-import ch.sourcepond.io.hotdeployer.impl.key.DefaultResourceKey;
+import org.junit.Test;
 
 /**
  *
  */
-class HotdeployEventFactory {
+public class BundleNotAvailableExceptionTest {
 
-    HotdeployEvent create(final PathChangeEvent pDelegate, final DefaultResourceKey pKey) {
-        return new HotdeployEvent(pDelegate, pKey);
+    @Test
+    public void verifyToString() {
+        // Should not throw an exception
+        new BundleNotAvailableException(null, null, null).toString();
     }
 }
