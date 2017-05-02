@@ -73,7 +73,7 @@ class ObserverAdapter implements PathChangeListener {
             fileChangeListener.modified(eventProxyFactory.create(pEvent, key));
             LOG.debug("Modified: {}", pEvent);
         } catch (final BundleNotAvailableException e) {
-            queue.postpone(context, pEvent, e);
+            queue.postpone(pEvent, e);
         } catch (final ResourceKeyException e) {
             LOG.warn("Observer was not informed about modification because a problem was reported!", e);
         }

@@ -16,6 +16,8 @@ import ch.sourcepond.io.fileobserver.spi.WatchedDirectory;
 import ch.sourcepond.io.hotdeployer.api.FileChangeListener;
 import ch.sourcepond.io.hotdeployer.impl.determinator.BundleDeterminator;
 import ch.sourcepond.io.hotdeployer.impl.determinator.BundleDeterminatorFactory;
+import ch.sourcepond.io.hotdeployer.impl.determinator.PostponeQueue;
+import ch.sourcepond.io.hotdeployer.impl.determinator.PostponeQueueFactory;
 import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
 import ch.sourcepond.io.hotdeployer.impl.key.KeyProviderFactory;
 import ch.sourcepond.io.hotdeployer.impl.observer.ObserverAdapterFactory;
@@ -48,8 +50,12 @@ public class Activator {
     private final DirectoryFactory directoryFactory;
     private final BundleDeterminatorFactory bundleDeterminatorFactory;
     private final KeyProviderFactory keyProviderFactory;
+    private final PostponeQueueFactory queueFactory;
+    private final ObserverAdapterFactory adapterFactory;
     private final ConcurrentMap<ServiceReference<FileChangeListener>, ServiceRegistration<PathChangeListener>> observers = new ConcurrentHashMap<>();
-    private volatile ObserverAdapterFactory adapterFactory;
+    private volatile Config config;
+    private volatile BundleContext context;
+    private volatile PostponeQueue queue;
     private volatile BundleDeterminator bundleDeterminator;
     private volatile KeyProvider keyProvider;
     private volatile WatchedDirectory watchedDirectory;
@@ -58,15 +64,21 @@ public class Activator {
 
     // Constructor for OSGi DS
     public Activator() {
-        this( new BundleDeterminatorFactory(),
+        this(new PostponeQueueFactory(),
+                new ObserverAdapterFactory(),
+                new BundleDeterminatorFactory(),
                 new DirectoryFactory(),
                 new KeyProviderFactory());
     }
 
     // Constructor for testing
-    Activator(final BundleDeterminatorFactory pBundleDeterminatorFactory,
+    Activator(final PostponeQueueFactory pPostQueueFactory,
+              final ObserverAdapterFactory pAdapterFactory,
+              final BundleDeterminatorFactory pBundleDeterminatorFactory,
               final DirectoryFactory pDirectoryFactory,
               final KeyProviderFactory pKeyProviderFactory) {
+        queueFactory = pPostQueueFactory;
+        adapterFactory = pAdapterFactory;
         bundleDeterminatorFactory = pBundleDeterminatorFactory;
         directoryFactory = pDirectoryFactory;
         keyProviderFactory = pKeyProviderFactory;
@@ -74,7 +86,11 @@ public class Activator {
 
     @Activate
     public void activate(final BundleContext pContext, final Config pConfig) throws IOException, URISyntaxException {
-        adapterFactory = new ObserverAdapterFactory(pContext);
+        context = pContext;
+        config = pConfig;
+        queue = queueFactory.createQueue(pContext);
+        queue.setConfig(pConfig);
+
         watchedDirectory = directoryFactory.newWatchedDirectory(pConfig);
         adapterFactory.setConfig(watchedDirectory.getDirectory().getFileSystem(), pConfig);
         watchedDirectoryRegistration = pContext.registerService(WatchedDirectory.class, watchedDirectory, null);
@@ -87,8 +103,12 @@ public class Activator {
 
     @Modified
     public void modify(final Config pConfig) throws IOException, URISyntaxException {
-        final String previousPrefix = pConfig.bundleResourceDirectoryPrefix();
+        final String previousPrefix = config.bundleResourceDirectoryPrefix();
         final String newPrefix = pConfig.bundleResourceDirectoryPrefix();
+
+        config = pConfig;
+        queue.setConfig(pConfig);
+
         final Collection<ServiceReference<FileChangeListener>> toBeRegistered = previousPrefix.equals(newPrefix) ? null :
                 new ArrayList<>(observers.keySet());
 
@@ -114,7 +134,7 @@ public class Activator {
         hookRegistration.unregister();
         observers.forEach((k, v) -> v.unregister());
         observers.clear();
-        adapterFactory.shutdown();
+        queueFactory.shutdown();
         LOG.info("Activator shutdown");
     }
 
@@ -125,11 +145,10 @@ public class Activator {
 
     @Reference(policy = DYNAMIC, cardinality = MULTIPLE, unbind = "removeObserver")
     public void addListener(final ServiceReference<FileChangeListener> pReference) {
-        final BundleContext ctx = pReference.getBundle().getBundleContext();
-        final FileChangeListener listener = ctx.getService(pReference);
-        observers.put(pReference, ctx.registerService(
+        final FileChangeListener listener = context.getService(pReference);
+        observers.put(pReference, context.registerService(
                 PathChangeListener.class,
-                adapterFactory.createAdapter(ctx, keyProvider, listener),
+                adapterFactory.createAdapter(context, queue, keyProvider, listener),
                 null));
     }
 

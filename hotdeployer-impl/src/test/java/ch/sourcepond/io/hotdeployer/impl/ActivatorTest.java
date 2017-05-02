@@ -16,13 +16,14 @@ import ch.sourcepond.io.fileobserver.spi.WatchedDirectory;
 import ch.sourcepond.io.hotdeployer.api.FileChangeListener;
 import ch.sourcepond.io.hotdeployer.impl.determinator.BundleDeterminator;
 import ch.sourcepond.io.hotdeployer.impl.determinator.BundleDeterminatorFactory;
+import ch.sourcepond.io.hotdeployer.impl.determinator.PostponeQueue;
+import ch.sourcepond.io.hotdeployer.impl.determinator.PostponeQueueFactory;
 import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
 import ch.sourcepond.io.hotdeployer.impl.key.KeyProviderFactory;
 import ch.sourcepond.io.hotdeployer.impl.observer.ObserverAdapterFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -40,6 +41,8 @@ public class ActivatorTest {
     private static final String DIFFERENT_PREFIX = "$DIFFERENT$_";
     private final FileSystem fs = mock(FileSystem.class);
     private final Path hotdeployDir = mock(Path.class);
+    private final PostponeQueueFactory queueFactory = mock(PostponeQueueFactory.class);
+    private final PostponeQueue queue = mock(PostponeQueue.class);
     private final ObserverAdapterFactory adapterFactory = mock(ObserverAdapterFactory.class);
     private final PathChangeListener adapter = mock(PathChangeListener.class);
     private final KeyProviderFactory keyProviderFactory = mock(KeyProviderFactory.class);
@@ -48,8 +51,6 @@ public class ActivatorTest {
     private final BundleDeterminator bundleDeterminator = mock(BundleDeterminator.class);
     private final DirectoryFactory directoryFactory = mock(DirectoryFactory.class);
     private final ServiceReference<FileChangeListener> observerRef = mock(ServiceReference.class);
-    private final Bundle observerBundle = mock(Bundle.class);
-    private final BundleContext observerBundleContext = mock(BundleContext.class);
     private final FileChangeListener observer = mock(FileChangeListener.class);
     private final WatchedDirectory watchedDirectory = mock(WatchedDirectory.class);
     private final ServiceRegistration<WatchedDirectory> watchedDirectoryRegistration = mock(ServiceRegistration.class);
@@ -57,13 +58,15 @@ public class ActivatorTest {
     private final ServiceRegistration<PathChangeListener> observerAdapterRegistration = mock(ServiceRegistration.class);
     private final BundleContext context = mock(BundleContext.class);
     private final Config config = mock(Config.class);
-    private final Activator activator = new Activator(bundleDeterminatorFactory, directoryFactory, keyProviderFactory);
+    private final Activator activator = new Activator(queueFactory, adapterFactory,
+            bundleDeterminatorFactory, directoryFactory, keyProviderFactory);
 
     @Before
     public void setup() throws Exception {
+        when(queueFactory.createQueue(context)).thenReturn(queue);
         when(hotdeployDir.getFileSystem()).thenReturn(fs);
         when(watchedDirectory.getDirectory()).thenReturn(hotdeployDir);
-        when(adapterFactory.createAdapter(observerBundleContext, keyProvider, observer)).thenReturn(adapter);
+        when(adapterFactory.createAdapter(context, queue, keyProvider, observer)).thenReturn(adapter);
         when(keyProviderFactory.createProvider(bundleDeterminator)).thenReturn(keyProvider);
         when(bundleDeterminatorFactory.createDeterminator(context)).thenReturn(bundleDeterminator);
         when(directoryFactory.getHotdeployDir(config)).thenReturn(hotdeployDir);
@@ -71,12 +74,8 @@ public class ActivatorTest {
         when(directoryFactory.newWatchedDirectory(config)).thenReturn(watchedDirectory);
         when(context.registerService(WatchedDirectory.class, watchedDirectory, null)).thenReturn(watchedDirectoryRegistration);
         when(context.registerService(KeyDeliveryHook.class, keyProvider, null)).thenReturn(hookRegistration);
-
-        when(observerRef.getBundle()).thenReturn(observerBundle);
-        when(observerBundle.getBundleContext()).thenReturn(observerBundleContext);
-        when(observerBundleContext.getBundle()).thenReturn(observerBundle);
-        when(observerBundleContext.getService(observerRef)).thenReturn(observer);
-        when(observerBundleContext.registerService(PathChangeListener.class, adapter, null)).thenReturn(observerAdapterRegistration);
+        when(context.getService(observerRef)).thenReturn(observer);
+        when(context.registerService(PathChangeListener.class, adapter, null)).thenReturn(observerAdapterRegistration);
 
         activator.activate(context, config);
         activator.addListener(observerRef);
@@ -89,6 +88,7 @@ public class ActivatorTest {
 
     @Test
     public void activate() {
+        verify(queue).setConfig(config);
         verify(adapterFactory).setConfig(fs, config);
     }
 
@@ -98,13 +98,14 @@ public class ActivatorTest {
         verify(watchedDirectoryRegistration).unregister();
         verify(hookRegistration).unregister();
         verify(observerAdapterRegistration).unregister();
-        verify(adapterFactory).shutdown();
+        verify(queueFactory).shutdown();
     }
 
     @Test
     public void modify() throws Exception {
         verify(bundleDeterminator).setPrefix(ANY_PREFIX);
         activator.modify(config);
+        verify(queue, times(2)).setConfig(config);
         verify(watchedDirectory).relocate(hotdeployDir);
         verify(adapterFactory, times(2)).setConfig(fs, config);
         verifyZeroInteractions(observerAdapterRegistration);
@@ -116,7 +117,7 @@ public class ActivatorTest {
         when(newConfig.bundleResourceDirectoryPrefix()).thenReturn(DIFFERENT_PREFIX);
         when(directoryFactory.newWatchedDirectory(newConfig)).thenReturn(watchedDirectory);
         when(directoryFactory.getHotdeployDir(newConfig)).thenReturn(hotdeployDir);
-        when(adapterFactory.createAdapter(context, keyProvider, observer)).thenReturn(adapter);
+        when(adapterFactory.createAdapter(context, queue, keyProvider, observer)).thenReturn(adapter);
 
         activator.modify(newConfig);
         final InOrder order = inOrder(bundleDeterminator, observerAdapterRegistration, watchedDirectory);

@@ -50,7 +50,7 @@ public class ObserverAdapterTest {
     private final BundleContext context = mock(BundleContext.class);
     private final BundleNotAvailableException bundleNotAvailableException = new BundleNotAvailableException(mock(Path.class), "any", VersionRange.valueOf("(1.0,2.0]"));
     private final ExecutorService postponeExecutor = mock(ExecutorService.class);
-    private final ObserverAdapterFactory factory = new ObserverAdapterFactory(postponeExecutor, queue, eventProxyFactory, proxyFactory);
+    private final ObserverAdapterFactory factory = new ObserverAdapterFactory(eventProxyFactory, proxyFactory);
     private PathChangeListener adapter;
 
     @Before
@@ -60,7 +60,7 @@ public class ObserverAdapterTest {
         when(provider.getKey(fileKey)).thenReturn(resourceKey);
         when(proxyFactory.createProxy(restriction)).thenReturn(proxy);
         when(eventProxyFactory.create(event, fileKey)).thenReturn(eventProxy);
-        adapter = factory.createAdapter(context, provider, fileChangeListener);
+        adapter = factory.createAdapter(context, queue, provider, fileChangeListener);
     }
 
     @Test
@@ -86,7 +86,7 @@ public class ObserverAdapterTest {
     public void modifiedBundleIsNotAvailable() throws Exception {
         doThrow(bundleNotAvailableException).when(provider).getKey(fileKey);
         adapter.modified(event);
-        verify(queue).postpone(context, event, bundleNotAvailableException);
+        verify(queue).postpone(event, bundleNotAvailableException);
     }
 
     @Test
