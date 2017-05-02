@@ -45,32 +45,28 @@ import static org.slf4j.LoggerFactory.getLogger;
 @Designate(ocd = Config.class)
 public class Activator {
     private static final Logger LOG = getLogger(Activator.class);
-    private final ObserverAdapterFactory adapterFactory;
     private final DirectoryFactory directoryFactory;
     private final BundleDeterminatorFactory bundleDeterminatorFactory;
     private final KeyProviderFactory keyProviderFactory;
-    private volatile Config config;
-    private BundleDeterminator bundleDeterminator;
-    private KeyProvider keyProvider;
-    private WatchedDirectory watchedDirectory;
-    private ServiceRegistration<KeyDeliveryHook> hookRegistration;
-    private ServiceRegistration<WatchedDirectory> watchedDirectoryRegistration;
-    private ConcurrentMap<ServiceReference<FileChangeListener>, ServiceRegistration<PathChangeListener>> observers = new ConcurrentHashMap<>();
+    private final ConcurrentMap<ServiceReference<FileChangeListener>, ServiceRegistration<PathChangeListener>> observers = new ConcurrentHashMap<>();
+    private volatile ObserverAdapterFactory adapterFactory;
+    private volatile BundleDeterminator bundleDeterminator;
+    private volatile KeyProvider keyProvider;
+    private volatile WatchedDirectory watchedDirectory;
+    private volatile ServiceRegistration<KeyDeliveryHook> hookRegistration;
+    private volatile ServiceRegistration<WatchedDirectory> watchedDirectoryRegistration;
 
     // Constructor for OSGi DS
     public Activator() {
-        this(new ObserverAdapterFactory(),
-                new BundleDeterminatorFactory(),
+        this( new BundleDeterminatorFactory(),
                 new DirectoryFactory(),
                 new KeyProviderFactory());
     }
 
     // Constructor for testing
-    Activator(final ObserverAdapterFactory pAdapterFactory,
-              final BundleDeterminatorFactory pBundleDeterminatorFactory,
+    Activator(final BundleDeterminatorFactory pBundleDeterminatorFactory,
               final DirectoryFactory pDirectoryFactory,
               final KeyProviderFactory pKeyProviderFactory) {
-        adapterFactory = pAdapterFactory;
         bundleDeterminatorFactory = pBundleDeterminatorFactory;
         directoryFactory = pDirectoryFactory;
         keyProviderFactory = pKeyProviderFactory;
@@ -78,9 +74,9 @@ public class Activator {
 
     @Activate
     public void activate(final BundleContext pContext, final Config pConfig) throws IOException, URISyntaxException {
-        config = pConfig;
+        adapterFactory = new ObserverAdapterFactory(pContext);
         watchedDirectory = directoryFactory.newWatchedDirectory(pConfig);
-        adapterFactory.setConfig(watchedDirectory.getDirectory().getFileSystem(), config);
+        adapterFactory.setConfig(watchedDirectory.getDirectory().getFileSystem(), pConfig);
         watchedDirectoryRegistration = pContext.registerService(WatchedDirectory.class, watchedDirectory, null);
         bundleDeterminator = bundleDeterminatorFactory.createDeterminator(pContext);
         bundleDeterminator.setPrefix(pConfig.bundleResourceDirectoryPrefix());
@@ -91,9 +87,8 @@ public class Activator {
 
     @Modified
     public void modify(final Config pConfig) throws IOException, URISyntaxException {
-        final String previousPrefix = config.bundleResourceDirectoryPrefix();
+        final String previousPrefix = pConfig.bundleResourceDirectoryPrefix();
         final String newPrefix = pConfig.bundleResourceDirectoryPrefix();
-        config = pConfig;
         final Collection<ServiceReference<FileChangeListener>> toBeRegistered = previousPrefix.equals(newPrefix) ? null :
                 new ArrayList<>(observers.keySet());
 
@@ -106,7 +101,7 @@ public class Activator {
         try {
             watchedDirectory.relocate(hotdeployDir);
         } finally {
-            adapterFactory.setConfig(hotdeployDir.getFileSystem(), config);
+            adapterFactory.setConfig(hotdeployDir.getFileSystem(), pConfig);
             if (toBeRegistered != null) {
                 toBeRegistered.forEach(this::addListener);
             }

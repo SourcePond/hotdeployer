@@ -57,7 +57,7 @@ public class ActivatorTest {
     private final ServiceRegistration<PathChangeListener> observerAdapterRegistration = mock(ServiceRegistration.class);
     private final BundleContext context = mock(BundleContext.class);
     private final Config config = mock(Config.class);
-    private final Activator activator = new Activator(adapterFactory, bundleDeterminatorFactory, directoryFactory, keyProviderFactory);
+    private final Activator activator = new Activator(bundleDeterminatorFactory, directoryFactory, keyProviderFactory);
 
     @Before
     public void setup() throws Exception {

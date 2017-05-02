@@ -37,7 +37,7 @@ public class PostponeQueue implements Runnable {
     private TimeUnit unit;
 
     // Constructor for activator
-    public PostponeQueue() {
+    public PostponeQueue(final BundleContext pContext) {
         this(new DelayQueue<>(), LOG);
     }
 

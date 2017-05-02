@@ -14,6 +14,7 @@ import ch.sourcepond.io.hotdeployer.impl.Config;
 import ch.sourcepond.io.hotdeployer.impl.determinator.PostponeQueue;
 import org.junit.Before;
 import org.junit.Test;
+import org.osgi.framework.BundleContext;
 
 import java.nio.file.FileSystem;
 import java.util.List;
@@ -34,6 +35,7 @@ public class ObserverAdapterFactoryTest {
     private static final long BUNDLE_AVAILABILITY_TIMEOUT = 1L;
     private static final TimeUnit BUNDLE_AVAILABILITY_UNIT = SECONDS;
     private static final String BUNDLE_RESOURCE_DIRECTORY_PREFIX = "prefix";
+    private final BundleContext context = mock(BundleContext.class);
     private final ExecutorService postponeExecutor = mock(ExecutorService.class);
     private final PostponeQueue queue = mock(PostponeQueue.class);
     private final HotdeployEventFactory eventProxyFactory = mock(HotdeployEventFactory.class);
@@ -50,7 +52,7 @@ public class ObserverAdapterFactoryTest {
 
     @Test
     public void verifyDefaultConstructor() {
-        new ObserverAdapterFactory().shutdown();
+        new ObserverAdapterFactory(context).shutdown();
     }
 
     @Test

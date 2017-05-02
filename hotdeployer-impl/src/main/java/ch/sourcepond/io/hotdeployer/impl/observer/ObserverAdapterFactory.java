@@ -34,9 +34,9 @@ public class ObserverAdapterFactory {
     private final BundlePathDeterminator proxyFactory;
 
     // Constructor for activator
-    public ObserverAdapterFactory() {
+    public ObserverAdapterFactory(final BundleContext pContext) {
         this(createDefaultExecutor(),
-                new PostponeQueue(),
+                new PostponeQueue(pContext),
                 new HotdeployEventFactory(),
                 new BundlePathDeterminator());
     }

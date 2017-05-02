@@ -71,7 +71,7 @@ public class PostponeQueueTest {
 
     @Test(timeout = 2000)
     public void verifyDefaultConstructor() {
-        queue = new PostponeQueue();
+        queue = new PostponeQueue(context);
         setup();
         postpone();
     }
