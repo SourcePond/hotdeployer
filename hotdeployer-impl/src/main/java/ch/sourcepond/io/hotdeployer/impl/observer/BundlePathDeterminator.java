@@ -11,8 +11,6 @@ limitations under the License.*/
 package ch.sourcepond.io.hotdeployer.impl.observer;
 
 import ch.sourcepond.io.fileobserver.api.SimpleDispatchRestriction;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.VersionRange;
 
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
@@ -35,19 +33,8 @@ public class BundlePathDeterminator {
             "(\\]|\\)))$";
 
     private static final char[] TO_BE_ESCAPED = {'\\', '^', '$', '.', '|', '?', '*', '+', '(', ')', '[', '{'};
-    private final VersionRangeFactory versionRangeFactory;
     private volatile PathMatcher symbolicNameMatcher;
     private volatile PathMatcher versionRangeMatcher;
-
-    // Constructor for activator
-    public BundlePathDeterminator() {
-        this(new VersionRangeFactory());
-    }
-
-    // Constructor for testing
-    BundlePathDeterminator(final VersionRangeFactory pVersionRangeFactory) {
-        versionRangeFactory = pVersionRangeFactory;
-    }
 
     static String escape(final String pPrefix) {
         final StringBuilder builder = new StringBuilder(pPrefix);
@@ -61,12 +48,12 @@ public class BundlePathDeterminator {
         return builder.toString();
     }
 
-    DispatchRestrictionProxy createProxy(final SimpleDispatchRestriction pDelegate, final Bundle pBundle) {
-        return new DispatchRestrictionProxy(this, pDelegate, pBundle);
+    DispatchRestrictionProxy createProxy(final SimpleDispatchRestriction pDelegate) {
+        return new DispatchRestrictionProxy(this, pDelegate);
     }
 
-    BundlePathMatcher create(final PathMatcher pMatcher, final Bundle pBundle) {
-        return new BundlePathMatcher(this, pBundle, pMatcher);
+    BundlePathMatcher create(final PathMatcher pMatcher) {
+        return new BundlePathMatcher(this, pMatcher);
     }
 
     public void setConfig(final FileSystem pFs, final String pPrefix) {
@@ -74,17 +61,11 @@ public class BundlePathDeterminator {
         versionRangeMatcher = pFs.getPathMatcher(VERSION_RANGE_PATTERN);
     }
 
-    boolean apply(final PathMatcher pMatcher, final Bundle pBundle, final Path pPath) {
+    boolean apply(final PathMatcher pMatcher, final Path pPath) {
         final int endIndex = pPath.getNameCount();
-        Path versionRangePart = null;
-        boolean matches = endIndex > 2 &&
+        return endIndex > 2 &&
                 symbolicNameMatcher.matches(pPath.subpath(0, 1)) &&
-                versionRangeMatcher.matches((versionRangePart = pPath.subpath(1, 2))) &&
+                versionRangeMatcher.matches(pPath.subpath(1, 2)) &&
                 pMatcher.matches(pPath.subpath(2, endIndex));
-        if (matches) {
-            final VersionRange range = versionRangeFactory.createVersion(versionRangePart.toString());
-            matches = range.includes(pBundle.getVersion());
-        }
-        return matches;
     }
 }

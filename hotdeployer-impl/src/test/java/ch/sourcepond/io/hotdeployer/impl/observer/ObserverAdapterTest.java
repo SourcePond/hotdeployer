@@ -21,7 +21,6 @@ import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
 import ch.sourcepond.io.hotdeployer.impl.key.ResourceKeyException;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.VersionRange;
 
@@ -51,17 +50,15 @@ public class ObserverAdapterTest {
     private final BundleContext context = mock(BundleContext.class);
     private final BundleNotAvailableException bundleNotAvailableException = new BundleNotAvailableException(mock(Path.class), "any", VersionRange.valueOf("(1.0,2.0]"));
     private final ExecutorService postponeExecutor = mock(ExecutorService.class);
-    private final Bundle bundle = mock(Bundle.class);
     private final ObserverAdapterFactory factory = new ObserverAdapterFactory(postponeExecutor, queue, eventProxyFactory, proxyFactory);
     private PathChangeListener adapter;
 
     @Before
     public void setup() throws Exception {
-        when(context.getBundle()).thenReturn(bundle);
         when(event.getKey()).thenReturn(fileKey);
         when(eventProxyFactory.create(event, resourceKey)).thenReturn(eventProxy);
         when(provider.getKey(fileKey)).thenReturn(resourceKey);
-        when(proxyFactory.createProxy(restriction, bundle)).thenReturn(proxy);
+        when(proxyFactory.createProxy(restriction)).thenReturn(proxy);
         when(eventProxyFactory.create(event, fileKey)).thenReturn(eventProxy);
         adapter = factory.createAdapter(context, provider, fileChangeListener);
     }

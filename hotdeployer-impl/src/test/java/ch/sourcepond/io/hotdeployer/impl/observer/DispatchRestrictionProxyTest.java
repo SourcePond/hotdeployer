@@ -13,7 +13,6 @@ package ch.sourcepond.io.hotdeployer.impl.observer;
 import ch.sourcepond.io.fileobserver.api.SimpleDispatchRestriction;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.framework.Bundle;
 
 import java.nio.file.PathMatcher;
 
@@ -28,13 +27,12 @@ public class DispatchRestrictionProxyTest {
     private final BundlePathDeterminator determinator = mock(BundlePathDeterminator.class);
     private final PathMatcher baseMatcher = mock(PathMatcher.class);
     private final BundlePathMatcher bundlePathMatcher = mock(BundlePathMatcher.class);
-    private final Bundle bundle = mock(Bundle.class);
-    private final DispatchRestrictionProxy proxy = new DispatchRestrictionProxy(determinator, restriction, bundle);
+    private final DispatchRestrictionProxy proxy = new DispatchRestrictionProxy(determinator, restriction);
 
     @Before
     public void setup() {
         when(restriction.addPathMatcher(ANY_SYNTAX_AND_PATTERN)).thenReturn(baseMatcher);
-        when(determinator.create(baseMatcher, bundle)).thenReturn(bundlePathMatcher);
+        when(determinator.create(baseMatcher)).thenReturn(bundlePathMatcher);
     }
 
     @Test
