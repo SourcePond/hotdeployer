@@ -12,7 +12,6 @@ package ch.sourcepond.io.hotdeployer.impl.determinator;
 
 import ch.sourcepond.io.fileobserver.api.DispatchKey;
 import ch.sourcepond.io.fileobserver.api.PathChangeEvent;
-import ch.sourcepond.io.hotdeployer.impl.Config;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,9 +25,7 @@ import java.util.concurrent.DelayQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static java.lang.Thread.currentThread;
-import static java.lang.Thread.interrupted;
-import static java.lang.Thread.sleep;
+import static java.lang.Thread.*;
 import static java.util.concurrent.Executors.newCachedThreadPool;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.*;
@@ -45,7 +42,6 @@ public class PostponeQueueTest {
     private static final String ANY_SYMBOLIC_NAME = "anySymbolicName";
     private final ExecutorService executor = newCachedThreadPool();
     private final BundleContext context = mock(BundleContext.class);
-    private final Config config = mock(Config.class);
     private final Path bundleKey = mock(Path.class);
     private final DispatchKey key = mock(DispatchKey.class);
     private final PathChangeEvent event = mock(PathChangeEvent.class);
@@ -64,9 +60,7 @@ public class PostponeQueueTest {
         when(bundle.getSymbolicName()).thenReturn(ANY_SYMBOLIC_NAME);
         when(bundle.getVersion()).thenReturn(Version.valueOf("1.0"));
         when(event.getKey()).thenReturn(key);
-        when(config.bundleAvailabilityTimeout()).thenReturn(TIMEOUT);
-        when(config.bundleAvailabilityTimeoutUnit()).thenReturn(UNIT);
-        queue.setConfig(config);
+        queue.setBundleAvailabilityTimeout(TIMEOUT, UNIT);
     }
 
     @After

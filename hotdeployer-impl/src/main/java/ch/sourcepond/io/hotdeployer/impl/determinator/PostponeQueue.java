@@ -12,13 +12,13 @@ package ch.sourcepond.io.hotdeployer.impl.determinator;
 
 import ch.sourcepond.io.fileobserver.api.DispatchKey;
 import ch.sourcepond.io.fileobserver.api.PathChangeEvent;
-import ch.sourcepond.io.hotdeployer.impl.Config;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.DelayQueue;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.Thread.currentThread;
 import static java.time.Duration.ofMillis;
@@ -33,7 +33,8 @@ public class PostponeQueue implements Runnable {
     private static final Logger LOG = getLogger(PostponeQueue.class);
     private final BlockingQueue<BundleAvailableListener> queue;
     private final Logger logger;
-    private Config config;
+    private long timout;
+    private TimeUnit unit;
 
     // Constructor for activator
     public PostponeQueue() {
@@ -47,8 +48,9 @@ public class PostponeQueue implements Runnable {
         logger = pLogger;
     }
 
-    public void setConfig(final Config pConfig) {
-        config = pConfig;
+    public void setBundleAvailabilityTimeout(final long pTimeout, final TimeUnit pUnit) {
+        timout = pTimeout;
+        unit = pUnit;
     }
 
     public void dropEvents(final DispatchKey pKey) {
@@ -71,8 +73,7 @@ public class PostponeQueue implements Runnable {
     }
 
     public void postpone(final BundleContext pContext, final PathChangeEvent pEvent, final BundleNotAvailableException pCause) {
-        final long timeout = MILLISECONDS.convert(config.bundleAvailabilityTimeout(),
-                config.bundleAvailabilityTimeoutUnit());
+        final long timeout = MILLISECONDS.convert(timout, unit);
 
         if (logger.isDebugEnabled()) {
             logger.debug("Postponed with timout of {} ms: {}", timeout, pEvent);

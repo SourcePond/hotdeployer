@@ -69,6 +69,7 @@ public class ObserverAdapterFactory {
 
     public void setConfig(final FileSystem pFileSystem, final Config pConfig) {
         proxyFactory.setConfig(pFileSystem, pConfig.bundleResourceDirectoryPrefix());
+        queue.setBundleAvailabilityTimeout(pConfig.bundleAvailabilityTimeout(), pConfig.bundleAvailabilityTimeoutUnit());
     }
 
     public PathChangeListener createAdapter(final BundleContext pContext,

@@ -12,6 +12,7 @@ package ch.sourcepond.io.hotdeployer.impl.observer;
 
 import ch.sourcepond.io.hotdeployer.impl.Config;
 import ch.sourcepond.io.hotdeployer.impl.determinator.PostponeQueue;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.nio.file.FileSystem;
@@ -22,6 +23,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import static ch.sourcepond.io.hotdeployer.impl.observer.ObserverAdapterFactory.createDefaultExecutor;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -29,6 +31,8 @@ import static org.mockito.Mockito.*;
  *
  */
 public class ObserverAdapterFactoryTest {
+    private static final long BUNDLE_AVAILABILITY_TIMEOUT = 1L;
+    private static final TimeUnit BUNDLE_AVAILABILITY_UNIT = SECONDS;
     private static final String BUNDLE_RESOURCE_DIRECTORY_PREFIX = "prefix";
     private final ExecutorService postponeExecutor = mock(ExecutorService.class);
     private final PostponeQueue queue = mock(PostponeQueue.class);
@@ -37,6 +41,12 @@ public class ObserverAdapterFactoryTest {
     private final FileSystem fs = mock(FileSystem.class);
     private final Config config = mock(Config.class);
     private final ObserverAdapterFactory factory = new ObserverAdapterFactory(postponeExecutor, queue, eventProxyFactory, proxyFactory);
+
+    @Before
+    public void setup() {
+        when(config.bundleAvailabilityTimeoutUnit()).thenReturn(BUNDLE_AVAILABILITY_UNIT);
+        when(config.bundleAvailabilityTimeout()).thenReturn(BUNDLE_AVAILABILITY_TIMEOUT);
+    }
 
     @Test
     public void verifyDefaultConstructor() {
@@ -54,6 +64,7 @@ public class ObserverAdapterFactoryTest {
         when(config.bundleResourceDirectoryPrefix()).thenReturn(BUNDLE_RESOURCE_DIRECTORY_PREFIX);
         factory.setConfig(fs, config);
         verify(proxyFactory).setConfig(fs, BUNDLE_RESOURCE_DIRECTORY_PREFIX);
+        verify(queue).setBundleAvailabilityTimeout(BUNDLE_AVAILABILITY_TIMEOUT, BUNDLE_AVAILABILITY_UNIT);
     }
 
     @Test(timeout = 3000)
@@ -75,7 +86,7 @@ public class ObserverAdapterFactoryTest {
         }
 
         executor.shutdown();
-        executor.awaitTermination(2L, TimeUnit.SECONDS);
+        executor.awaitTermination(2L, SECONDS);
 
         assertEquals(runnables.length, verification.size());
         for (int i = 0; i < runnables.length; i++) {
