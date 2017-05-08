@@ -12,7 +12,6 @@
     <packaging>feature</packaging>
 
 
-
     <dependencies>
         <dependency>
             <scope>provided</scope>
