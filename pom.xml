@@ -38,7 +38,7 @@
 
 
     <properties>
-        <fileobserver.version>7.0.0</fileobserver.version>
+        <fileobserver.version>7.0.1</fileobserver.version>
         <smartswitch.version>4.0.1</smartswitch.version>
         <repo.project>${project.artifactId}</repo.project>
     </properties>
