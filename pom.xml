@@ -38,8 +38,8 @@
 
 
     <properties>
-        <fileobserver.version>7.0.1</fileobserver.version>
-        <fileobserver-feature.version>7.0-SNAPSHOT</fileobserver-feature.version>
+        <fileobserver.version>7.0.4</fileobserver.version>
+        <fileobserver-feature.version>7.0.4</fileobserver-feature.version>
         <smartswitch.version>4.0.1</smartswitch.version>
         <repo.project>${project.artifactId}</repo.project>
     </properties>
