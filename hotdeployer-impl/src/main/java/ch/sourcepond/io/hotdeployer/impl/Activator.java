@@ -33,6 +33,8 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -92,6 +94,8 @@ public class Activator {
         queue.setConfig(pConfig);
 
         watchedDirectory = directoryFactory.newWatchedDirectory(pConfig);
+        addBlacklistPatterns();
+
         adapterFactory.setConfig(watchedDirectory.getDirectory().getFileSystem(), pConfig);
         watchedDirectoryRegistration = pContext.registerService(WatchedDirectory.class, watchedDirectory, null);
         bundleDeterminator = bundleDeterminatorFactory.createDeterminator(pContext);
@@ -104,6 +108,7 @@ public class Activator {
     @Modified
     public void modify(final Config pConfig) throws IOException, URISyntaxException {
         final String previousPrefix = config.bundleResourceDirectoryPrefix();
+        final String previousBlacklistPatterns = config.blacklistPatterns();
         final String newPrefix = pConfig.bundleResourceDirectoryPrefix();
 
         config = pConfig;
@@ -125,7 +130,31 @@ public class Activator {
             if (toBeRegistered != null) {
                 toBeRegistered.forEach(this::addListener);
             }
+            updateBlacklistPatterns(previousBlacklistPatterns);
         }
+    }
+
+    private void updateBlacklistPatterns(final String pPreviousBlacklistPatterns) {
+        if (!pPreviousBlacklistPatterns.equals(config.blacklistPatterns())) {
+            for (final String pattern : toPatterns(pPreviousBlacklistPatterns)) {
+                watchedDirectory.removeBlacklistPattern(pattern);
+            }
+            addBlacklistPatterns();
+        }
+    }
+
+    private void addBlacklistPatterns() {
+        for (final String pattern : toPatterns(config.blacklistPatterns())) {
+            watchedDirectory.addBlacklistPattern(pattern.trim());
+        }
+    }
+
+    private Collection<String> toPatterns(final String pBlacklistPatterns) {
+        final List<String> patterns = new LinkedList<>();
+        for (final String pattern : config.blacklistPatterns().split(",")) {
+            patterns.add(pattern.trim());
+        }
+        return patterns;
     }
 
     @Deactivate

@@ -42,10 +42,11 @@ public @interface Config {
 
     @AttributeDefinition(
             name="Naming patterns to be blacklisted",
-            description = "Regular expressions to identify files/directories within the hotdeployment directory " +
-                    "(see 'hotdeployDirectoryURI') which should be ignored i.e. not be handled by any observer."
+            description = "Expressions supported by the filesystem (like glob, see https://docs.oracle.com/javase/8/docs" +
+                    "/api/java/nio/file/FileSystem.html#getPathMatcher-java.lang.String-) to identify files/directories " +
+                    "within the hotdeployment directory (see 'hotdeployDirectoryURI') which should be ignored i.e. not be handled by any observer."
     )
-    String[] blacklistPatterns() default "";
+    String blacklistPatterns() default "";
 
     @AttributeDefinition(
             name="TimeUnit of the bundle availability timeout",

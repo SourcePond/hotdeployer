@@ -41,10 +41,6 @@ public class DirectoryFactory {
     }
 
     WatchedDirectory newWatchedDirectory(final Config pConfig) throws IOException, URISyntaxException {
-        final WatchedDirectory directory = create(DIRECTORY_KEY, getHotdeployDir(pConfig));
-        for (final String pattern : pConfig.blacklistPatterns()) {
-            directory.addBlacklistPattern(pattern);
-        }
-        return directory;
+        return create(DIRECTORY_KEY, getHotdeployDir(pConfig));
     }
 }

@@ -39,6 +39,7 @@ import static org.mockito.Mockito.*;
 public class ActivatorTest {
     private static final String ANY_PREFIX = "$BUNDLE$_";
     private static final String DIFFERENT_PREFIX = "$DIFFERENT$_";
+    private static final String BLACKLIST_PATTERNS = " AAA.zip ,  BBB.zip,CCC.zip ";
     private final FileSystem fs = mock(FileSystem.class);
     private final Path hotdeployDir = mock(Path.class);
     private final PostponeQueueFactory queueFactory = mock(PostponeQueueFactory.class);
@@ -71,6 +72,7 @@ public class ActivatorTest {
         when(bundleDeterminatorFactory.createDeterminator(context)).thenReturn(bundleDeterminator);
         when(directoryFactory.getHotdeployDir(config)).thenReturn(hotdeployDir);
         when(config.bundleResourceDirectoryPrefix()).thenReturn(ANY_PREFIX);
+        when(config.blacklistPatterns()).thenReturn(BLACKLIST_PATTERNS);
         when(directoryFactory.newWatchedDirectory(config)).thenReturn(watchedDirectory);
         when(context.registerService(WatchedDirectory.class, watchedDirectory, null)).thenReturn(watchedDirectoryRegistration);
         when(context.registerService(KeyDeliveryHook.class, keyProvider, null)).thenReturn(hookRegistration);
@@ -90,6 +92,9 @@ public class ActivatorTest {
     public void activate() {
         verify(queue).setConfig(config);
         verify(adapterFactory).setConfig(fs, config);
+        verify(watchedDirectory).addBlacklistPattern("AAA.zip");
+        verify(watchedDirectory).addBlacklistPattern("BBB.zip");
+        verify(watchedDirectory).addBlacklistPattern("CCC.zip");
     }
 
     @Test
@@ -103,17 +108,29 @@ public class ActivatorTest {
 
     @Test
     public void modify() throws Exception {
+        final Config newConfig = mock(Config.class);
+        when(newConfig.blacklistPatterns()).thenReturn(BLACKLIST_PATTERNS + "    ,    DDD.zip");
+        when(newConfig.bundleResourceDirectoryPrefix()).thenReturn(DIFFERENT_PREFIX);
+        when(directoryFactory.getHotdeployDir(newConfig)).thenReturn(hotdeployDir);
         verify(bundleDeterminator).setPrefix(ANY_PREFIX);
-        activator.modify(config);
-        verify(queue, times(2)).setConfig(config);
+        activator.modify(newConfig);
+        verify(queue).setConfig(newConfig);
         verify(watchedDirectory).relocate(hotdeployDir);
-        verify(adapterFactory, times(2)).setConfig(fs, config);
-        verifyZeroInteractions(observerAdapterRegistration);
+        verify(adapterFactory).setConfig(fs, newConfig);
+        verify(watchedDirectory).removeBlacklistPattern("AAA.zip");
+        verify(watchedDirectory).removeBlacklistPattern("BBB.zip");
+        verify(watchedDirectory).removeBlacklistPattern("CCC.zip");
+        verify(watchedDirectory, times(2)).addBlacklistPattern("AAA.zip");
+        verify(watchedDirectory, times(2)).addBlacklistPattern("BBB.zip");
+        verify(watchedDirectory, times(2)).addBlacklistPattern("CCC.zip");
+        verify(watchedDirectory).addBlacklistPattern("DDD.zip");
+        verify(observerAdapterRegistration).unregister();
     }
 
     @Test
     public void modifyPrefixChanged() throws Exception {
         final Config newConfig = mock(Config.class);
+        when(newConfig.blacklistPatterns()).thenReturn(BLACKLIST_PATTERNS);
         when(newConfig.bundleResourceDirectoryPrefix()).thenReturn(DIFFERENT_PREFIX);
         when(directoryFactory.newWatchedDirectory(newConfig)).thenReturn(watchedDirectory);
         when(directoryFactory.getHotdeployDir(newConfig)).thenReturn(hotdeployDir);
