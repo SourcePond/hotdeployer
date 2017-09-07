@@ -8,7 +8,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.*/
-package ch.sourcepond.io.hotdeployer.impl.observer;
+package ch.sourcepond.io.hotdeployer.impl.listener;
 
 import ch.sourcepond.io.fileobserver.api.DispatchKey;
 import ch.sourcepond.io.fileobserver.api.DispatchRestriction;
@@ -31,15 +31,15 @@ import static org.slf4j.LoggerFactory.getLogger;
 /**
  *
  */
-class ObserverAdapter implements PathChangeListener {
-    private static final Logger LOG = getLogger(ObserverAdapter.class);
+class ListenerAdapter implements PathChangeListener {
+    private static final Logger LOG = getLogger(ListenerAdapter.class);
     private final PostponeQueue queue;
     private final HotdeployEventFactory eventProxyFactory;
     private final BundlePathDeterminator proxyFactory;
     private final KeyProvider keyProvider;
     private final FileChangeListener fileChangeListener;
 
-    ObserverAdapter(final PostponeQueue pQueue,
+    ListenerAdapter(final PostponeQueue pQueue,
                     final HotdeployEventFactory pEventProxyFactory,
                     final BundlePathDeterminator pProxyFactory,
                     final KeyProvider pKeyProvider,

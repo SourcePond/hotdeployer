@@ -8,25 +8,32 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.*/
-package ch.sourcepond.io.hotdeployer.impl.observer;
+package ch.sourcepond.io.hotdeployer.impl.listener;
 
-import java.nio.file.Path;
+import ch.sourcepond.io.fileobserver.api.SimpleDispatchRestriction;
+
 import java.nio.file.PathMatcher;
 
 /**
  *
  */
-class BundlePathMatcher implements PathMatcher {
-    private final PathMatcher matcher;
+class DispatchRestrictionProxy implements SimpleDispatchRestriction {
+    private final SimpleDispatchRestriction delegate;
     private final BundlePathDeterminator determinator;
 
-    BundlePathMatcher(final BundlePathDeterminator pDeterminator, final PathMatcher pMatcher) {
-        matcher = pMatcher;
+    DispatchRestrictionProxy(final BundlePathDeterminator pDeterminator,
+                             final SimpleDispatchRestriction pDelegate) {
         determinator = pDeterminator;
+        delegate = pDelegate;
     }
 
     @Override
-    public boolean matches(final Path path) {
-        return determinator.apply(matcher, path);
+    public PathMatcher addPathMatcher(final String pSyntaxAndPattern) {
+        return addPathMatcher(delegate.addPathMatcher(pSyntaxAndPattern));
+    }
+
+    @Override
+    public PathMatcher addPathMatcher(final PathMatcher pCustomMatcher) {
+        return delegate.addPathMatcher(determinator.create(pCustomMatcher));
     }
 }

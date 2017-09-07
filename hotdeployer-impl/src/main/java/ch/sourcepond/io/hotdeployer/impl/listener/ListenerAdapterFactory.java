@@ -8,7 +8,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.*/
-package ch.sourcepond.io.hotdeployer.impl.observer;
+package ch.sourcepond.io.hotdeployer.impl.listener;
 
 import ch.sourcepond.io.fileobserver.api.PathChangeListener;
 import ch.sourcepond.io.hotdeployer.api.FileChangeListener;
@@ -21,18 +21,18 @@ import java.nio.file.FileSystem;
 /**
  *
  */
-public class ObserverAdapterFactory {
+public class ListenerAdapterFactory {
     private final HotdeployEventFactory eventProxyFactory;
     private final BundlePathDeterminator proxyFactory;
 
     // Constructor for activator
-    public ObserverAdapterFactory() {
+    public ListenerAdapterFactory() {
         this(new HotdeployEventFactory(),
                 new BundlePathDeterminator());
     }
 
     // Constructor for testing
-    ObserverAdapterFactory(
+    ListenerAdapterFactory(
             final HotdeployEventFactory pEventProxyFactory,
             final BundlePathDeterminator pProxyFactory) {
         eventProxyFactory = pEventProxyFactory;
@@ -46,7 +46,7 @@ public class ObserverAdapterFactory {
     public PathChangeListener createAdapter(final PostponeQueue pQueue,
                                             final KeyProvider pKeyProvider,
                                             final FileChangeListener pFileChangeListener) {
-        return new ObserverAdapter(pQueue,
+        return new ListenerAdapter(pQueue,
                 eventProxyFactory,
                 proxyFactory,
                 pKeyProvider,

@@ -8,7 +8,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.*/
-package ch.sourcepond.io.hotdeployer.impl.observer;
+package ch.sourcepond.io.hotdeployer.impl.listener;
 
 import ch.sourcepond.io.fileobserver.api.DispatchKey;
 import ch.sourcepond.io.fileobserver.api.DispatchRestriction;
@@ -33,7 +33,7 @@ import static org.mockito.Mockito.*;
 /**
  *
  */
-public class ObserverAdapterTest {
+public class ListenerAdapterTest {
     private final DispatchKey fileKey = mock(DispatchKey.class);
     private final PathChangeEvent event = mock(PathChangeEvent.class);
     private final HotdeployEvent eventProxy = mock(HotdeployEvent.class);
@@ -47,7 +47,7 @@ public class ObserverAdapterTest {
     private final DispatchRestriction restriction = mock(DispatchRestriction.class);
     private final PostponeQueue queue = mock(PostponeQueue.class);
     private final BundleNotAvailableException bundleNotAvailableException = new BundleNotAvailableException(mock(Path.class), "any", VersionRange.valueOf("(1.0,2.0]"));
-    private final ObserverAdapterFactory factory = new ObserverAdapterFactory(eventProxyFactory, proxyFactory);
+    private final ListenerAdapterFactory factory = new ListenerAdapterFactory(eventProxyFactory, proxyFactory);
     private PathChangeListener adapter;
 
     @Before

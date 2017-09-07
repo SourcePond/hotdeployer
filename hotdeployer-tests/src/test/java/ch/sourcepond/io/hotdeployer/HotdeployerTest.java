@@ -61,7 +61,6 @@ import static org.osgi.framework.Constants.SYSTEM_BUNDLE_ID;
  */
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
-@Ignore
 public class HotdeployerTest {
     private final static Path TEST_DIR = getDefault().getPath(getProperty("user.dir"), "target", "hotdeploy");
 
@@ -124,6 +123,7 @@ public class HotdeployerTest {
         createDirectories(TEST_DIR);
         systemBundle = context.getBundle(SYSTEM_BUNDLE_ID);
         hotdeployObserverRegistration = context.registerService(FileChangeListener.class, changeListener.mock, null);
+        sleep(5000);
     }
 
     @After
@@ -192,10 +192,10 @@ public class HotdeployerTest {
 
         // modified should have been called exactly once
         final Path relativePath = bundleRoot.relativize(testFile);
-        verify(changeListener.mock, timeout(20000)).modified(event(relativePath, bundle));
+        verify(changeListener.mock, timeout(30000)).modified(event(relativePath, bundle));
 
         delete(testFile);
-        verify(changeListener.mock, timeout(10000)).discard(key(relativePath, bundle));
+        verify(changeListener.mock, timeout(30000)).discard(key(relativePath, bundle));
     }
 
     @Test

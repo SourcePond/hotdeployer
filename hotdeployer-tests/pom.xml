@@ -18,7 +18,7 @@
 
     <properties>
         <org.eclipse.osgi.version>3.10.101.v20150820-1432</org.eclipse.osgi.version>
-        <fileobserver.version>7.0.6</fileobserver.version>
+        <fileobserver.version>8.0.0</fileobserver.version>
         <repo.project>fileobserver</repo.project>
     </properties>
 

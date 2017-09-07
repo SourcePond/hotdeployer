@@ -20,7 +20,7 @@ import ch.sourcepond.io.hotdeployer.impl.determinator.PostponeQueue;
 import ch.sourcepond.io.hotdeployer.impl.determinator.PostponeQueueFactory;
 import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
 import ch.sourcepond.io.hotdeployer.impl.key.KeyProviderFactory;
-import ch.sourcepond.io.hotdeployer.impl.observer.ObserverAdapterFactory;
+import ch.sourcepond.io.hotdeployer.impl.listener.ListenerAdapterFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
@@ -37,14 +37,14 @@ import static org.mockito.Mockito.*;
  *
  */
 public class ActivatorTest {
-    private static final String ANY_PREFIX = "$BUNDLE$_";
-    private static final String DIFFERENT_PREFIX = "$DIFFERENT$_";
+    private static final String ANY_PREFIX = "__BUNDLE__";
+    private static final String DIFFERENT_PREFIX = "__DIFFERENT__";
     private static final String BLACKLIST_PATTERNS = " AAA.zip ,  BBB.zip,CCC.zip ";
     private final FileSystem fs = mock(FileSystem.class);
     private final Path hotdeployDir = mock(Path.class);
     private final PostponeQueueFactory queueFactory = mock(PostponeQueueFactory.class);
     private final PostponeQueue queue = mock(PostponeQueue.class);
-    private final ObserverAdapterFactory adapterFactory = mock(ObserverAdapterFactory.class);
+    private final ListenerAdapterFactory adapterFactory = mock(ListenerAdapterFactory.class);
     private final PathChangeListener adapter = mock(PathChangeListener.class);
     private final KeyProviderFactory keyProviderFactory = mock(KeyProviderFactory.class);
     private final KeyProvider keyProvider = mock(KeyProvider.class);

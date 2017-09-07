@@ -27,16 +27,16 @@ public interface FileChangeEvent extends PathChangeEvent {
      * source bundle by analyzing the the first two elements of the relative path (relative to the hotdeployment
      * root) of the changed file. A bundle determination is performed when following criterias are fulfilled:
      * <ul>
-     *     <li>The first path element starts with a configured prefix, like $BUNDLE$_</li>
+     *     <li>The first path element starts with a configured prefix, like __BUNDLE__</li>
      *     <li>The name of the first path element without the prefix matches the requirements of a Bundle-SymbolicName
      *     (allowed characterars: "A-Z a-z 0-9 . _-")</li>
      *     <li>The name of the second path element represents a valid OSGi version.</li>
      * </ul>
      * Examples:
      * <ul>
-     *     <li>$BUNDLE$_com.foo.bar/1.0.0/...</li>
-     *     <li>$BUNDLE$_com.foo.bar/1.0.0.RELEASE/...</li>
-     *     <li>$BUNDLE$_com.foo.bar/1.0.0.20170501-1312/...</li>
+     *     <li>__BUNDLE__com.foo.bar/1.0.0/...</li>
+     *     <li>__BUNDLE__com.foo.bar/1.0.0.RELEASE/...</li>
+     *     <li>__BUNDLE__com.foo.bar/1.0.0.20170501-1312/...</li>
      * </ul>
      *
      * It's perfectly valid to arrange files differently. In this case, the bundle determination will be skipped

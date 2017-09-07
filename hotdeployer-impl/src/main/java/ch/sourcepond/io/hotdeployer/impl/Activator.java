@@ -20,7 +20,7 @@ import ch.sourcepond.io.hotdeployer.impl.determinator.PostponeQueue;
 import ch.sourcepond.io.hotdeployer.impl.determinator.PostponeQueueFactory;
 import ch.sourcepond.io.hotdeployer.impl.key.KeyProvider;
 import ch.sourcepond.io.hotdeployer.impl.key.KeyProviderFactory;
-import ch.sourcepond.io.hotdeployer.impl.observer.ObserverAdapterFactory;
+import ch.sourcepond.io.hotdeployer.impl.listener.ListenerAdapterFactory;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -53,7 +53,7 @@ public class Activator {
     private final BundleDeterminatorFactory bundleDeterminatorFactory;
     private final KeyProviderFactory keyProviderFactory;
     private final PostponeQueueFactory queueFactory;
-    private final ObserverAdapterFactory adapterFactory;
+    private final ListenerAdapterFactory adapterFactory;
     private final ConcurrentMap<ServiceReference<FileChangeListener>, ServiceRegistration<PathChangeListener>> observers = new ConcurrentHashMap<>();
     private volatile Config config;
     private volatile BundleContext context;
@@ -67,7 +67,7 @@ public class Activator {
     // Constructor for OSGi DS
     public Activator() {
         this(new PostponeQueueFactory(),
-                new ObserverAdapterFactory(),
+                new ListenerAdapterFactory(),
                 new BundleDeterminatorFactory(),
                 new DirectoryFactory(),
                 new KeyProviderFactory());
@@ -75,7 +75,7 @@ public class Activator {
 
     // Constructor for testing
     Activator(final PostponeQueueFactory pPostQueueFactory,
-              final ObserverAdapterFactory pAdapterFactory,
+              final ListenerAdapterFactory pAdapterFactory,
               final BundleDeterminatorFactory pBundleDeterminatorFactory,
               final DirectoryFactory pDirectoryFactory,
               final KeyProviderFactory pKeyProviderFactory) {
@@ -151,8 +151,11 @@ public class Activator {
 
     private Collection<String> toPatterns(final String pBlacklistPatterns) {
         final List<String> patterns = new LinkedList<>();
-        for (final String pattern : config.blacklistPatterns().split(",")) {
-            patterns.add(pattern.trim());
+        for (String pattern : config.blacklistPatterns().split(",")) {
+            pattern = pattern.trim();
+            if (!pattern.isEmpty()) {
+                patterns.add(pattern);
+            }
         }
         return patterns;
     }
@@ -184,7 +187,7 @@ public class Activator {
     public void removeObserver(final ServiceReference<FileChangeListener> pObserver) {
         final ServiceRegistration<PathChangeListener> adapterRegistration = observers.remove(pObserver);
         if (adapterRegistration == null) {
-            LOG.warn("No adapter was registered for hotdeployer-observer {}", pObserver);
+            LOG.warn("No adapter was registered for hotdeployer-listener {}", pObserver);
         } else {
             adapterRegistration.unregister();
         }

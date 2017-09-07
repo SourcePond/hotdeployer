@@ -8,17 +8,25 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.*/
-package ch.sourcepond.io.hotdeployer.impl.observer;
+package ch.sourcepond.io.hotdeployer.impl.listener;
 
-import ch.sourcepond.io.fileobserver.api.PathChangeEvent;
-import ch.sourcepond.io.hotdeployer.impl.key.DefaultResourceKey;
+import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 
 /**
  *
  */
-class HotdeployEventFactory {
+class BundlePathMatcher implements PathMatcher {
+    private final PathMatcher matcher;
+    private final BundlePathDeterminator determinator;
 
-    HotdeployEvent create(final PathChangeEvent pDelegate, final DefaultResourceKey pKey) {
-        return new HotdeployEvent(pDelegate, pKey);
+    BundlePathMatcher(final BundlePathDeterminator pDeterminator, final PathMatcher pMatcher) {
+        matcher = pMatcher;
+        determinator = pDeterminator;
+    }
+
+    @Override
+    public boolean matches(final Path path) {
+        return determinator.apply(matcher, path);
     }
 }
